@@ -1,0 +1,7 @@
+= Metanorma mn2sts
+
+
+
+== Copyright
+
+Ribose Inc.
