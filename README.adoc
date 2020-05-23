@@ -22,7 +22,7 @@ e.g.
 
 [source,sh]
 ----
-java -jar target/mn2sts-1.0.jar --xml-file tests/iso-tc154-8601-1-en.xml --xml-file-out tests/iso-tc154-8601-1-en.out.xml
+java -jar target/mn2sts-1.0.jar --xml-file-in tests/iso-tc154-8601-1-en.xml --xml-file-out tests/iso-tc154-8601-1-en.out.xml
 ----
 
 
@@ -43,7 +43,7 @@ Update version in `pom.xml`, e.g.:
 <groupId>com.metanorma</groupId>
 <artifactId>mn2sts</artifactId>
 <version>1.0</version>
-<name>Metanorma MN XML to ISO STS converter</name>
+<name>Metanorma MN XML to NISO STS XML converter</name>
 ----
 
 Build the package using instructions above, the package will be created at:
