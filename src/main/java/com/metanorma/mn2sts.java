@@ -11,6 +11,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.CodeSource;
 import java.text.MessageFormat;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.UUID;
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -33,7 +35,9 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
 
 /**
  * This class for the conversion of an XML file to PDF using FOP and JEuclid
@@ -71,7 +75,7 @@ public class mn2sts {
                     .build());
             addOption(Option.builder("s")
                     .longOpt("xsl-file")
-                    .desc("path to XSL file")
+                    .desc("path to XSL file (optional)")
                     .hasArg()
                     .argName("file")
                     .required(false)
@@ -150,10 +154,40 @@ public class mn2sts {
                 Schema schema = schemaFactory.newSchema(schemaFile);
                 
                 Validator validator = schema.newValidator();
-                validator.validate(new StreamSource(xmlout));                
-                System.out.println(xmlout.getAbsolutePath() + " is valid.");
+                
+                final List<SAXParseException> exceptions = new LinkedList<SAXParseException>();
+                validator.setErrorHandler(new ErrorHandler()
+                {
+                  @Override
+                  public void warning(SAXParseException exception) throws SAXException
+                  {
+                    exceptions.add(exception);
+                  }
+
+                  @Override
+                  public void fatalError(SAXParseException exception) throws SAXException
+                  {
+                    exceptions.add(exception);
+                  }
+
+                  @Override
+                  public void error(SAXParseException exception) throws SAXException
+                  {
+                    exceptions.add(exception);
+                  }
+                });
+                
+                validator.validate(new StreamSource(xmlout));
+                if (exceptions.size() == 0) {
+                    System.out.println(xmlout.getAbsolutePath() + " is valid.");
+                } else {
+                    System.out.println(xmlout.getAbsolutePath() + " is NOT valid reason:");
+                    for (SAXParseException exception: exceptions) {
+                        System.out.println("[ERROR] " + exception);
+                    }
+                }
             } catch (SAXException | IOException e) {                
-                System.out.println(xmlout.getAbsolutePath() + " is NOT valid reason:" + e);                
+                System.out.println(xmlout.getAbsolutePath() + " is NOT valid reason:" + e);
             }
 
         } catch (Exception e) {
