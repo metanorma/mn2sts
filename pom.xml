@@ -6,7 +6,7 @@
 	<groupId>com.metanorma</groupId>
 	<artifactId>mn2sts</artifactId>
 	<version>1.0</version>
-	<name>Metanorma MN XML to ISO STS converter</name>
+	<name>Metanorma MN XML to NISO STS XML converter</name>
 	<packaging>jar</packaging>
 	<url>https://www.metanorma.com</url>
 	<properties>

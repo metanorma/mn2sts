@@ -184,9 +184,9 @@ public class mn2sts {
 
                 CommandLine cmd = parser.parse(options, args);
 
-                System.out.println("mn2sts ");
+                System.out.print("mn2sts ");
                 if (cmd.hasOption("version")) {
-                    System.out.println(ver);
+                    System.out.print(ver);
                 }
                 System.out.println("\n");
 
