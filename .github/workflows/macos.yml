@@ -30,3 +30,7 @@ jobs:
       - name: Build
         run: |
           make all
+
+      - name: Compile output
+        run: |
+          make publish

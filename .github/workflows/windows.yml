@@ -27,3 +27,7 @@ jobs:
       - name: Build
         run: |
           make all SHELL=cmd
+
+      - name: Compile output
+        run: |
+          make publish SHELL=cmd
