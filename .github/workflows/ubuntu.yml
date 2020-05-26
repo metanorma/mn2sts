@@ -25,3 +25,33 @@ jobs:
         run: |
           make all
 
+      - name: Compile output
+        run: |
+          make publish
+
+      - uses: actions/upload-artifact@master
+        with:
+          name: published-ubuntu
+          path: published
+
+
+  deploy-gh-pages:
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+    - uses: actions/checkout@master
+    - uses: actions/download-artifact@master
+      with:
+        name: published-ubuntu
+        path: published
+
+    - name: GitHub Pages action
+      uses: docker://peaceiris/gh-pages:v2
+      with:
+        emptyCommits: false
+        forceOrphan: true
+      env:
+        ACTIONS_DEPLOY_KEY: ${{ secrets.GH_DEPLOY_KEY }}
+        PUBLISH_BRANCH: gh-pages
+        PUBLISH_DIR: ./published
