@@ -31,11 +31,11 @@ jobs:
 
       - name: Test against DTD NISO
         run: |
-          make mn2stsNISO
+          make mn2stsDTD_NISO
 
       - name: Test against DTD ISO
         run: |
-          make mn2stsISO
+          make mn2stsDTD_ISO
 
       - name: Compile output
         run: |
