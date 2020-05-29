@@ -25,10 +25,12 @@ public class XSDValidator extends Validator {
         
         SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
         // associate the schema factory with the resource resolver, which is responsible for resolving the imported XSD's
-        schemaFactory.setResourceResolver(new ResourceResolver(new File(checkSrc).getParentFile().toString() + "/"));
+        String rootResource = new File(checkSrc).getParentFile().toString() + "/";
+        schemaFactory.setResourceResolver(new ResourceResolver(rootResource));
+        //schemaFactory.setResourceResolver(new ResourceResolver(""));
               
         try {
-            Source schemaFile = new StreamSource(Util.getStreamFromResources(getClass().getClassLoader(), checkSrc));                
+            Source schemaFile = new StreamSource(Util.getStreamFromResources(getClass().getClassLoader(), checkSrc.replaceAll("\\\\", "/")));
             Schema schema = schemaFactory.newSchema(schemaFile);
             javax.xml.validation.Validator validator = schema.newValidator();
             validator.setErrorHandler(errorHandler);
