@@ -168,6 +168,7 @@ public class mn2sts {
                 exceptions.forEach((exception) -> {
                     System.out.println("[ERROR] " + exception);
                 });
+                System.exit(ERROR_EXIT_CODE);
             }
          
         } catch (Exception e) {
