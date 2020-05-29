@@ -28,9 +28,6 @@ deploy:
 mn2sts: target/$(JAR_FILE) | documents
 	java -jar target/$(JAR_FILE) --xml-file-in $(SRCFILE) --xml-file-out $(DESTXML)
 
-mn2stsXSD: documents
-	java -jar target/$(JAR_FILE) --xml-file-in $(SRCFILE) --xml-file-out $(DESTXML) --check-type xsd-niso
-
 mn2stsDTD_NISO: target/$(JAR_FILE) | documents 
 	java -jar target/$(JAR_FILE) --xml-file-in $(SRCFILE) --xml-file-out $(DESTXML) --check-type dtd-niso
 
