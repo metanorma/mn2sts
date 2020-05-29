@@ -28,10 +28,10 @@ deploy:
 mn2sts: target/$(JAR_FILE) | documents
 	java -jar target/$(JAR_FILE) --xml-file-in $(SRCFILE) --xml-file-out $(DESTXML)
 
-mn2stsDTD_NISO: target/$(JAR_FILE) | documents 
+mn2stsDTD_NISO: documents 
 	java -jar target/$(JAR_FILE) --xml-file-in $(SRCFILE) --xml-file-out $(DESTXML) --check-type dtd-niso
 
-mn2stsDTD_ISO: target/$(JAR_FILE) | documents
+mn2stsDTD_ISO: documents
 	java -jar target/$(JAR_FILE) --xml-file-in $(SRCFILE) --xml-file-out $(DESTXML) --check-type dtd-iso
 
 saxon.jar:
