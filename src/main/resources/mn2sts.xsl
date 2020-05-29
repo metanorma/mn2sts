@@ -275,7 +275,7 @@
 			<std-ref type="dated"><xsl:value-of select="*[local-name() = 'docidentifier']"/></std-ref>
 			<std-ref type="undated"><xsl:value-of select="substring-before(*[local-name() = 'docidentifier'], ':')"/></std-ref>
 			<doc-ref><xsl:value-of select="*[local-name() = 'docidentifier'][@type='iso-with-lang']"/></doc-ref>
-			<pub-date><xsl:value-of select="*[local-name() = 'date'][@type='published']/*[local-name() = 'on']"/></pub-date>
+			<release-date><xsl:value-of select="*[local-name() = 'date'][@type='published']/*[local-name() = 'on']"/></release-date>
 			<comm-ref><xsl:value-of select="concat(*[local-name() = 'copyright']/*[local-name() = 'owner']/*[local-name() = 'organization']/*[local-name() = 'abbreviation'], 
 										'/', *[local-name() = 'ext']/*[local-name() = 'editorialgroup']/*[local-name() = 'technical-committee']/@type, ' ',
 										*[local-name() = 'ext']/*[local-name() = 'editorialgroup']/*[local-name() = 'technical-committee']/@number)"/>
