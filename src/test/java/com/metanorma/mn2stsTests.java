@@ -60,7 +60,7 @@ public class mn2stsTests {
     }
 
     @Test
-    public void success() throws ParseException {
+    public void successXSD() throws ParseException {
         ClassLoader classLoader = getClass().getClassLoader();        
         String xml = classLoader.getResource("iso-tc154-8601-1-en.xml").getFile();        
         Path xmlout = Paths.get(System.getProperty("buildDirectory"), "out.xml");
@@ -69,6 +69,33 @@ public class mn2stsTests {
         mn2sts.main(args);
 
         assertTrue(Files.exists(xmlout));
+        assertTrue(systemOutRule.getLog().contains("is valid"));
+    }
+    
+    @Test
+    public void successDTD_NISO() throws ParseException {
+        ClassLoader classLoader = getClass().getClassLoader();        
+        String xml = classLoader.getResource("iso-tc154-8601-1-en.xml").getFile();        
+        Path xmlout = Paths.get(System.getProperty("buildDirectory"), "out.xml");
+
+        String[] args = new String[]{"--xml-file-in",  xml, "--xml-file-out", xmlout.toAbsolutePath().toString(), "--check-type", "dtd-niso"};
+        mn2sts.main(args);
+
+        assertTrue(Files.exists(xmlout));
+        assertTrue(systemOutRule.getLog().contains("is valid"));
+    }
+    
+    @Test
+    public void nosuccessDTD_ISO() throws ParseException {
+        ClassLoader classLoader = getClass().getClassLoader();        
+        String xml = classLoader.getResource("iso-tc154-8601-1-en.xml").getFile();        
+        Path xmlout = Paths.get(System.getProperty("buildDirectory"), "out.xml");
+
+        String[] args = new String[]{"--xml-file-in",  xml, "--xml-file-out", xmlout.toAbsolutePath().toString(), "--check-type", "dtd-iso"};
+        mn2sts.main(args);
+
+        assertTrue(Files.exists(xmlout));
+        assertTrue(systemOutRule.getLog().contains("is NOT valid"));
     }
     
 }

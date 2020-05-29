@@ -1,20 +1,21 @@
 package com.metanorma;
 
+import com.metanorma.validator.CheckAgainstEnum;
+import com.metanorma.validator.CheckAgainstMap;
+import com.metanorma.validator.DTDValidator;
+import com.metanorma.validator.XSDValidator;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
+
 import java.security.CodeSource;
 import java.text.MessageFormat;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.UUID;
-import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.SAXParserFactory;
 import javax.xml.transform.Source;
@@ -23,9 +24,6 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
-import javax.xml.validation.Schema;
-import javax.xml.validation.SchemaFactory;
-import javax.xml.validation.Validator;
 import javax.xml.xpath.XPathFactory;
 
 import org.apache.commons.cli.CommandLine;
@@ -35,9 +33,6 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.xml.sax.ErrorHandler;
-import org.xml.sax.SAXException;
-import org.xml.sax.SAXParseException;
 
 /**
  * This class for the conversion of an XML file to PDF using FOP and JEuclid
@@ -52,6 +47,8 @@ public class mn2sts {
     static final String INPUT_LOG = "Input: %s (%s)";
     static final String OUTPUT_LOG = "Output: %s (%s)";
 
+    static CheckAgainstEnum checkAgainst = CheckAgainstEnum.XSD_NISO;
+    
     static boolean DEBUG = false;
 
     static final Options optionsInfo = new Options() {
@@ -97,6 +94,13 @@ public class mn2sts {
                     .desc("display application version")
                     .required(false)
                     .build());
+            addOption(Option.builder("t")
+                    .longOpt("check-type")
+                    .desc("Check against XSD NISO (value xsd-niso), DTD ISO (dtd-iso), DTD NISO (dtd-niso) (Default: xsd-niso)")
+                    .hasArg()
+                    .argName("xsd-niso|dtd-iso|dtd-niso")
+                    .required(false)
+                    .build());
         }
     };
 
@@ -104,20 +108,18 @@ public class mn2sts {
 
     static final int ERROR_EXIT_CODE = -1;
 
-    static final String TMPDIR = System.getProperty("java.io.tmpdir");
-
-    final Path tmpfilepath = Paths.get(TMPDIR, UUID.randomUUID().toString());
-
+   
     /**
-     * Converts an MN XML file to ISO STS XML file
+     * Converts an MN XML file to NISO STS XML file
      *
      * @param xmlin the XML source file
      * @param xsl the external XSL file
      * @param xmlout the XML output file
      * @throws IOException In case of an I/O problem
+     * @throws javax.xml.transform.TransformerException
      */
     public void convertmn2sts(File xmlin, File xsl, File xmlout) throws IOException, TransformerException {
-
+        
         try {
             OutputJaxpImplementationInfo();
 
@@ -125,13 +127,13 @@ public class mn2sts {
             if (xsl != null) { //external xsl
                 srcXSL = new StreamSource(xsl);
             } else { // internal xsl
-                srcXSL = new StreamSource(getStreamFromResources("mn2sts.xsl"));
+                srcXSL = new StreamSource(Util.getStreamFromResources(getClass().getClassLoader(), "mn2sts.xsl"));
             }
 
             TransformerFactory factory = TransformerFactory.newInstance();
             Transformer transformer = factory.newTransformer(srcXSL);
             transformer.setParameter("debug", DEBUG);
-
+ 
             Source src = new StreamSource(xmlin);
             StringWriter resultWriter = new StringWriter();
             StreamResult sr = new StreamResult(resultWriter);
@@ -142,54 +144,32 @@ public class mn2sts {
             try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(xmlout.getAbsolutePath()))) {
                 writer.write(xmlSTS);
             }
-
-            System.out.println("Validate XML againts XSD...");
-            SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-            // associate the schema factory with the resource resolver, which is responsible for resolving the imported XSD's
-            schemaFactory.setResourceResolver(new ResourceResolver("xsd/"));
             
-            try {
-                Source schemaFile = new StreamSource(getStreamFromResources("xsd/NISO-STS-extended-1-mathml3.xsd"));
-                
-                Schema schema = schemaFactory.newSchema(schemaFile);
-                
-                Validator validator = schema.newValidator();
-                
-                final List<SAXParseException> exceptions = new LinkedList<SAXParseException>();
-                validator.setErrorHandler(new ErrorHandler()
-                {
-                  @Override
-                  public void warning(SAXParseException exception) throws SAXException
-                  {
-                    exceptions.add(exception);
-                  }
-
-                  @Override
-                  public void fatalError(SAXParseException exception) throws SAXException
-                  {
-                    exceptions.add(exception);
-                  }
-
-                  @Override
-                  public void error(SAXParseException exception) throws SAXException
-                  {
-                    exceptions.add(exception);
-                  }
-                });
-                
-                validator.validate(new StreamSource(xmlout));
-                if (exceptions.size() == 0) {
-                    System.out.println(xmlout.getAbsolutePath() + " is valid.");
-                } else {
-                    System.out.println(xmlout.getAbsolutePath() + " is NOT valid reason:");
-                    for (SAXParseException exception: exceptions) {
-                        System.out.println("[ERROR] " + exception);
-                    }
-                }
-            } catch (SAXException | IOException e) {                
-                System.out.println(xmlout.getAbsolutePath() + " is NOT valid reason:" + e);
+            List<String> exceptions = new LinkedList<String>(); 
+            
+            String checkSrc = CheckAgainstMap.getMap().get(checkAgainst);
+        
+            boolean isXSDcheck = checkSrc.toLowerCase().endsWith(".xsd");
+        
+            if (isXSDcheck) {
+                XSDValidator xsdValidator = new XSDValidator(xmlout);
+                exceptions = xsdValidator.validate(checkAgainst);                
+            } else {                
+                DTDValidator dtdValidator = new DTDValidator(xmlout);
+                dtdValidator.setDebug(DEBUG);
+                exceptions = dtdValidator.validate(checkAgainst);                
             }
-
+            
+            
+            if (exceptions.isEmpty()) {
+                System.out.println(xmlout.getAbsolutePath() + " is valid.");
+            } else {
+                System.out.println(xmlout.getAbsolutePath() + " is NOT valid reason:");
+                exceptions.forEach((exception) -> {
+                    System.out.println("[ERROR] " + exception);
+                });
+            }
+         
         } catch (Exception e) {
             e.printStackTrace(System.err);
             System.exit(ERROR_EXIT_CODE);
@@ -200,6 +180,7 @@ public class mn2sts {
      * Main method.
      *
      * @param args command-line arguments
+     * @throws org.apache.commons.cli.ParseException
      */
     public static void main(String[] args) throws ParseException {
 
@@ -246,6 +227,17 @@ public class mn2sts {
 
                 DEBUG = cmd.hasOption("debug");
 
+                if (cmd.hasOption("check-type")) {
+                    String ctype = cmd.getOptionValue("check-type");  
+                    ctype = ctype.replace("-", "_").toUpperCase();
+                    if (CheckAgainstEnum.valueOf(ctype) != null) {
+                        checkAgainst = CheckAgainstEnum.valueOf(ctype);
+                    } else {
+                        System.out.println("Unknown option value: " + cmd.getOptionValue("check-type"));
+                        System.exit(ERROR_EXIT_CODE);
+                    }
+                }
+                
                 System.out.println(String.format(INPUT_LOG, XML_INPUT, fXMLin));
                 if (fXSL != null) {
                     System.out.println(String.format(INPUT_LOG, XSL_INPUT, fXSL));
@@ -294,15 +286,5 @@ public class mn2sts {
                 componentName,
                 componentClass.getName(),
                 source == null ? "Java Runtime" : source.getLocation());
-    }
-
-    // get file from classpath, resources folder
-    private InputStream getStreamFromResources(String fileName) throws Exception {
-        ClassLoader classLoader = getClass().getClassLoader();
-        InputStream stream = classLoader.getResourceAsStream(fileName);
-        if (stream == null) {
-            throw new Exception("Cannot get resource \"" + fileName + "\" from Jar file.");
-        }
-        return stream;
-    }
+    }    
 }

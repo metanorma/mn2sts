@@ -5,7 +5,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.metanorma</groupId>
 	<artifactId>mn2sts</artifactId>
-	<version>1.0</version>
+	<version>1.1</version>
 	<name>Metanorma XML to NISO STS XML converter</name>
 	<packaging>jar</packaging>
 	<url>https://www.metanorma.com</url>
@@ -100,5 +100,10 @@
 			<version>1.19.0</version>
 			<scope>test</scope>
 		</dependency>
+                <dependency>
+                 <groupId>commons-io</groupId>
+                 <artifactId>commons-io</artifactId>
+                 <version>2.6</version>
+                </dependency>
 	</dependencies>
 </project>
