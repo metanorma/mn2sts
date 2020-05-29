@@ -15,6 +15,8 @@ import org.junit.contrib.java.lang.system.SystemOutRule;
 
 public class mn2stsTests {
 
+    final String XMLFILE = "src.test.xml";
+    
     @Rule
     public final ExpectedSystemExit exitRule = ExpectedSystemExit.none();
 
@@ -50,7 +52,7 @@ public class mn2stsTests {
         exitRule.expectSystemExitWithStatus(-1);
 
         ClassLoader classLoader = getClass().getClassLoader();        
-        String xml = classLoader.getResource("iso-tc154-8601-1-en.xml").getFile();
+        String xml = classLoader.getResource(XMLFILE).getFile();
 
         String[] args = new String[]{"--xml-file-in", xml, "--xsl-file", "alternate.xsl", "--xml-file-out", "out.xml"};
         mn2sts.main(args);
@@ -62,7 +64,7 @@ public class mn2stsTests {
     @Test
     public void successXSD() throws ParseException {
         ClassLoader classLoader = getClass().getClassLoader();        
-        String xml = classLoader.getResource("iso-tc154-8601-1-en.xml").getFile();        
+        String xml = classLoader.getResource(XMLFILE).getFile();        
         Path xmlout = Paths.get(System.getProperty("buildDirectory"), "out.xml");
 
         String[] args = new String[]{"--xml-file-in",  xml, "--xml-file-out", xmlout.toAbsolutePath().toString()};
@@ -75,7 +77,7 @@ public class mn2stsTests {
     @Test
     public void successDTD_NISO() throws ParseException {
         ClassLoader classLoader = getClass().getClassLoader();        
-        String xml = classLoader.getResource("iso-tc154-8601-1-en.xml").getFile();        
+        String xml = classLoader.getResource(XMLFILE).getFile();        
         Path xmlout = Paths.get(System.getProperty("buildDirectory"), "out.xml");
 
         String[] args = new String[]{"--xml-file-in",  xml, "--xml-file-out", xmlout.toAbsolutePath().toString(), "--check-type", "dtd-niso"};
@@ -90,7 +92,7 @@ public class mn2stsTests {
         //exitRule.expectSystemExitWithStatus(-1);
         
         ClassLoader classLoader = getClass().getClassLoader();        
-        String xml = classLoader.getResource("iso-tc154-8601-1-en.xml").getFile();        
+        String xml = classLoader.getResource(XMLFILE).getFile();        
         Path xmlout = Paths.get(System.getProperty("buildDirectory"), "out.xml");
 
         String[] args = new String[]{"--xml-file-in",  xml, "--xml-file-out", xmlout.toAbsolutePath().toString(), "--check-type", "dtd-iso"};

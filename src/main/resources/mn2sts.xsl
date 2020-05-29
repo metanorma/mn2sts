@@ -107,6 +107,7 @@
 																			$name = 'domain'">term_</xsl:when>				
 							<xsl:when test="$name = 'dl' or $name = 'table'">tab_</xsl:when>
 							<xsl:when test="$name = 'figure' or $name = 'image'">fig_</xsl:when>
+							<xsl:when test="$name = 'formula'">formula_</xsl:when>
 						</xsl:choose>
 						<xsl:value-of select="$section_"/>
 					</xsl:otherwise>
@@ -382,22 +383,38 @@
 		<xsl:variable name="number">
 			<xsl:number level="any" count="*[local-name() = 'bibitem']/*[local-name() = 'note'] | *[local-name() = 'fn']"/>
 		</xsl:variable>
-		<xref ref-type="fn" rid="fn_{$number}">
-			<sup><xsl:value-of select="$number"/></sup>
-		</xref>
-		<fn id="fn_{$number}">
-			<label>
+		
+		<xsl:variable name="xref_fn">
+			<xref ref-type="fn" rid="fn_{$number}">
 				<sup><xsl:value-of select="$number"/></sup>
-			</label>
-			<xsl:choose>
-				<xsl:when test="local-name() = 'fn'">
-					<xsl:apply-templates/>
-				</xsl:when>
-				<xsl:otherwise>
-					<p><xsl:apply-templates/></p>
-				</xsl:otherwise>
-			</xsl:choose>
-		</fn>
+			</xref>
+			<fn id="fn_{$number}">
+				<label>
+					<sup><xsl:value-of select="$number"/></sup>
+				</label>
+				<xsl:choose>
+					<xsl:when test="local-name() = 'fn'">
+						<xsl:apply-templates/>
+					</xsl:when>
+					<xsl:otherwise>
+						<p><xsl:apply-templates/></p>
+					</xsl:otherwise>
+				</xsl:choose>
+			</fn>
+		</xsl:variable>
+		
+		<xsl:choose>		
+			<xsl:when test="preceding-sibling::*[1][local-name() = 'image']">
+				<!-- enclose in 'p' -->
+				<p>
+					<xsl:copy-of select="$xref_fn"/>
+				</p>
+			</xsl:when>
+			<xsl:otherwise>
+				<xsl:copy-of select="$xref_fn"/>
+			</xsl:otherwise>
+		</xsl:choose>		
+		
 	</xsl:template>
 	
 	
@@ -688,6 +705,13 @@
 		<break/>
 	</xsl:template>
 	
+	
+	<xsl:template match="*[local-name() = 'th']/*[local-name() = 'br']">
+		<xsl:text disable-output-escaping="yes">&lt;/bold&gt;</xsl:text>
+		<break/>
+		<xsl:text disable-output-escaping="yes">&lt;bold&gt;</xsl:text>
+	</xsl:template>
+	
 	<xsl:template match="*[local-name() = 'xref']">
 		<xsl:variable name="section" select="xalan:nodeset($elements)//element[@source_id = current()/@target]/@section"/>
 		<xsl:variable name="id" select="xalan:nodeset($elements)//element[@source_id = current()/@target]/@id"/>
@@ -700,14 +724,77 @@
 				<xsl:otherwise>sec</xsl:otherwise>
 			</xsl:choose>
 		</xsl:variable>
-		
+	
 		<xref ref-type="{$ref_type}" rid="{$id}">
 			<xsl:if test="normalize-space($id) = ''">
 				<xsl:attribute name="rid"><xsl:value-of select="@target"/></xsl:attribute>
 			</xsl:if>
 			<xsl:value-of select="$section"/>
-		</xref>		
+		</xref>
+		
 	</xsl:template>
+	
+	<!-- need to be tested (find original NISO) -->
+	<xsl:template match="*[local-name() = 'callout']">
+		<xref ref-type="other" rid="{@target}">
+			<xsl:apply-templates/>
+		</xref>
+	</xsl:template>
+	
+
+	<!-- need to be tested (find original NISO) -->
+	<!-- https://github.com/metanorma/mn2sts/issues/8 -->
+	<xsl:template match="*[local-name() = 'admonition']">
+		<p id="{@id}">
+			<xsl:attribute name="content-type">
+				<xsl:value-of select="@type"/>
+			</xsl:attribute>			
+			<xsl:apply-templates />
+		</p>
+	</xsl:template>
+	<xsl:template match="*[local-name() = 'admonition']/*[local-name() = 'p']">
+		<xsl:apply-templates />
+	</xsl:template>
+	
+	<!-- https://github.com/metanorma/mn2sts/issues/9 -->
+	<xsl:template match="*[local-name() = 'quote2']">
+		<disp-quote>
+			<xsl:apply-templates/>
+		</disp-quote>
+	</xsl:template>
+	<xsl:template match="*[local-name() = 'quote']">
+		<sec id="{@id}">
+			<xsl:apply-templates/>
+		</sec>
+	</xsl:template>
+	<!-- need to be tested (find original NISO) -->
+	<xsl:template match="*[local-name() = 'quote']/*[local-name() = 'source']">		
+		<title>
+			<xsl:value-of select="@citeas"/>
+			<xsl:apply-templates select="*[local-name() = 'localityStack']"/>			
+		</title>
+	</xsl:template>
+	<xsl:template match="*[local-name() = 'quote']/*[local-name() = 'author']">
+		<p>
+			<xsl:apply-templates/>
+		</p>
+	</xsl:template>
+	
+	<!-- https://github.com/metanorma/mn2sts/issues/10 -->
+	<xsl:template match="*[local-name() = 'appendix']">
+		<sec id="{@id}">
+			<xsl:apply-templates/>
+		</sec>
+	</xsl:template>
+	
+	<xsl:template match="*[local-name() = 'annotation']">
+		<element-citation>
+			<annotation id="{@id}">
+				<xsl:apply-templates/>
+			</annotation>
+		</element-citation>
+	</xsl:template>
+	
 	
 	
 	<xsl:template match="*[local-name() = 'table']"> <!-- [*[local-name() = 'name']] -->
@@ -793,6 +880,17 @@
 		<td align="left" valign="top"><xsl:apply-templates/></td>
 	</xsl:template>
 	
+	<xsl:template match="*[local-name() = 'figure'][*[local-name() = 'figure']]" priority="1">
+		<xsl:variable name="current_id">
+			<xsl:call-template name="getId"/>
+		</xsl:variable>
+		<xsl:variable name="id" select="xalan:nodeset($elements)//element[@source_id = $current_id]/@id"/>
+		<xsl:variable name="section" select="xalan:nodeset($elements)//element[@source_id = $current_id]/@section"/>
+		<fig-group content-type="figures" id="{$id}">
+			<label><xsl:value-of select="$section"/></label>
+			<xsl:apply-templates />
+		</fig-group>
+	</xsl:template>
 	
 	<xsl:template match="*[local-name() = 'figure']">
 		<xsl:variable name="current_id">
@@ -833,9 +931,22 @@
 	</xsl:template>
 	
 	<xsl:template match="*[local-name() = 'stem']">
+		<xsl:if test="parent::*[local-name() = 'th']">
+			<xsl:text disable-output-escaping="yes">&lt;/bold&gt;</xsl:text>
+		</xsl:if>
 		<disp-formula>
+			<xsl:if test="parent::*[local-name() = 'formula']">
+				<xsl:variable name="current_id" select="../@id"/>		
+				<xsl:variable name="id" select="xalan:nodeset($elements)//element[@source_id = $current_id]/@id"/>
+				<xsl:attribute name="id">
+					<xsl:value-of select="$id"/>
+				</xsl:attribute>
+			</xsl:if>
 			<xsl:apply-templates />
 		</disp-formula>
+		<xsl:if test="parent::*[local-name() = 'th']">
+			<xsl:text disable-output-escaping="yes">&lt;bold&gt;</xsl:text>
+		</xsl:if>
 	</xsl:template>
 	
 	<xsl:template match="mml:*">
@@ -864,12 +975,7 @@
 			<xsl:apply-templates/>
 		</code>
 	</xsl:template>
-	
-	<xsl:template match="*[local-name() = 'quote']">
-		<disp-quote>
-			<xsl:apply-templates/>
-		</disp-quote>
-	</xsl:template>
+		
 	
 	<xsl:template name="getLevel">
 		<xsl:variable name="level_total" select="count(ancestor::*)"/>
