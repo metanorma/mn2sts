@@ -87,7 +87,7 @@ public class mn2stsTests {
         assertTrue(systemOutRule.getLog().contains("is valid"));
     }
     
-    @Test
+   /* @Test
     public void nosuccessDTD_ISO() throws ParseException {
         //exitRule.expectSystemExitWithStatus(-1);
         
@@ -95,11 +95,11 @@ public class mn2stsTests {
         String xml = classLoader.getResource(XMLFILE).getFile();        
         Path xmlout = Paths.get(System.getProperty("buildDirectory"), "out.xml");
 
-        String[] args = new String[]{"--xml-file-in",  xml, "--xml-file-out", xmlout.toAbsolutePath().toString(), "--check-type", "dtd-iso"};
+        String[] args = new String[]{"--xml-file-in",  xml, "--xml-file-out", xmlout.toAbsolutePath().toString(), "--check-type", "dtd-iso", "-d"};
         mn2sts.main(args);
 
         assertTrue(Files.exists(xmlout));
         assertTrue(systemOutRule.getLog().contains("is valid"));
-    }
+    }*/
     
 }
