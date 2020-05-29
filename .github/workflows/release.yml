@@ -27,6 +27,18 @@ jobs:
         run: |
           make test
 
+      - name: Test against XSD NISO
+        run: |
+          make mn2stsXSD
+
+      - name: Test against DTD NISO
+        run: |
+          make mn2stsDTD_NISO
+
+      - name: Test against DTD ISO
+        run: |
+          make mn2stsDTD_ISO
+
       - name: Compile output
         run: |
           make publish
