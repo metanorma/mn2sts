@@ -25,10 +25,6 @@ jobs:
         run: |
           make all
 
-      - name: Test against XSD NISO
-        run: |
-          make mn2stsXSD
-
       - name: Test against DTD NISO
         run: |
           make mn2stsDTD_NISO

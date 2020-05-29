@@ -28,10 +28,6 @@ jobs:
         run: |
           make all SHELL=cmd
 
-      - name: Test against XSD NISO
-        run: |
-          make mn2stsXSD SHELL=cmd
-
       - name: Test against DTD NISO
         run: |
           make mn2stsDTD_NISO SHELL=cmd
