@@ -41,7 +41,7 @@ test: target/$(JAR_FILE)
 deploy:
 	mvn --settings settings.xml -Dmaven.test.skip=true clean deploy shade:shade
 
-documents/%.xml: target/$(JAR_FILE) | documents
+documents/%.xml: target/$(JAR_FILE) src/test/resources/iso-rice-en.cd.xml | documents
 	java -jar target/$(JAR_FILE) --xml-file-in $(SRCFILE) --xml-file-out $(DESTXML)
 
 mn2stsDTD_NISO: | documents
