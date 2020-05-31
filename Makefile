@@ -44,10 +44,10 @@ deploy:
 documents/%.xml: target/$(JAR_FILE) src/test/resources/iso-rice-en.cd.xml | documents
 	java -jar target/$(JAR_FILE) --xml-file-in $(SRCFILE) --xml-file-out $(DESTXML)
 
-mn2stsDTD_NISO: | documents
+mn2stsDTD_NISO: src/test/resources/iso-rice-en.cd.xml | documents
 	java -jar target/$(JAR_FILE) --xml-file-in $(SRCFILE) --xml-file-out $(DESTXML) --check-type dtd-niso
 
-mn2stsDTD_ISO: | documents
+mn2stsDTD_ISO: src/test/resources/iso-rice-en.cd.xml | documents
 	java -jar target/$(JAR_FILE) --xml-file-in $(SRCFILE) --xml-file-out $(DESTXML) --check-type dtd-iso
 
 saxon.jar:
