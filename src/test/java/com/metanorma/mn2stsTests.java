@@ -90,9 +90,9 @@ public class mn2stsTests {
    /* @Test
     public void nosuccessDTD_ISO() throws ParseException {
         //exitRule.expectSystemExitWithStatus(-1);
-        
-        ClassLoader classLoader = getClass().getClassLoader();        
-        String xml = classLoader.getResource(XMLFILE).getFile();        
+
+        ClassLoader classLoader = getClass().getClassLoader();
+        String xml = classLoader.getResource(XMLFILE).getFile();
         Path xmlout = Paths.get(System.getProperty("buildDirectory"), "out.xml");
 
         String[] args = new String[]{"--xml-file-in",  xml, "--xml-file-out", xmlout.toAbsolutePath().toString(), "--check-type", "dtd-iso", "-d"};
