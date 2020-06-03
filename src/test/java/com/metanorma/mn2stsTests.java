@@ -15,7 +15,8 @@ import org.junit.contrib.java.lang.system.SystemOutRule;
 
 public class mn2stsTests {
 
-    final String XMLFILE = "src.test.xml";
+    final String XMLFILE_MN = "test.mn.xml";
+    final String XMLFILE_STS = "test.sts.xml";
     
     @Rule
     public final ExpectedSystemExit exitRule = ExpectedSystemExit.none();
@@ -52,7 +53,7 @@ public class mn2stsTests {
         exitRule.expectSystemExitWithStatus(-1);
 
         ClassLoader classLoader = getClass().getClassLoader();        
-        String xml = classLoader.getResource(XMLFILE).getFile();
+        String xml = classLoader.getResource(XMLFILE_MN).getFile();
 
         String[] args = new String[]{"--xml-file-in", xml, "--xsl-file", "alternate.xsl", "--xml-file-out", "out.xml"};
         mn2sts.main(args);
@@ -62,9 +63,9 @@ public class mn2stsTests {
     }
 
     @Test
-    public void successXSD() throws ParseException {
+    public void successConvertAndCheckXSD() throws ParseException {
         ClassLoader classLoader = getClass().getClassLoader();        
-        String xml = classLoader.getResource(XMLFILE).getFile();        
+        String xml = classLoader.getResource(XMLFILE_MN).getFile();        
         Path xmlout = Paths.get(System.getProperty("buildDirectory"), "out.xml");
 
         String[] args = new String[]{"--xml-file-in",  xml, "--xml-file-out", xmlout.toAbsolutePath().toString()};
@@ -75,15 +76,50 @@ public class mn2stsTests {
     }
     
     @Test
-    public void successDTD_NISO() throws ParseException {
+    public void successConvertAndCheckDTD_NISO() throws ParseException {
         ClassLoader classLoader = getClass().getClassLoader();        
-        String xml = classLoader.getResource(XMLFILE).getFile();        
+        String xml = classLoader.getResource(XMLFILE_MN).getFile();        
         Path xmlout = Paths.get(System.getProperty("buildDirectory"), "out.xml");
 
         String[] args = new String[]{"--xml-file-in",  xml, "--xml-file-out", xmlout.toAbsolutePath().toString(), "--check-type", "dtd-niso"};
         mn2sts.main(args);
 
         assertTrue(Files.exists(xmlout));
+        assertTrue(systemOutRule.getLog().contains("is valid"));
+    }
+    
+    @Test
+    public void successCheckXSD() throws ParseException {
+        ClassLoader classLoader = getClass().getClassLoader();        
+        String xml = classLoader.getResource(XMLFILE_STS).getFile();                
+
+        String[] args = new String[]{"--xml-file-in",  xml};
+        mn2sts.main(args);
+
+        assertTrue(systemOutRule.getLog().contains("is valid"));
+    }
+    
+    @Test
+    // Element type "code" must be declared. etc...
+    public void NoSuccessCheckDTD_ISO() throws ParseException {
+        
+        ClassLoader classLoader = getClass().getClassLoader();        
+        String xml = classLoader.getResource(XMLFILE_STS).getFile();                
+
+        String[] args = new String[]{"--xml-file-in",  xml, "--check-type", "dtd-iso"};
+        mn2sts.main(args);
+
+        assertTrue(systemOutRule.getLog().contains("is NOT valid"));
+    }
+    
+    @Test
+    public void successCheckDTD_NISO() throws ParseException {
+        ClassLoader classLoader = getClass().getClassLoader();        
+        String xml = classLoader.getResource(XMLFILE_STS).getFile();                
+
+        String[] args = new String[]{"--xml-file-in",  xml, "--check-type", "dtd-niso"};
+        mn2sts.main(args);
+
         assertTrue(systemOutRule.getLog().contains("is valid"));
     }
     
