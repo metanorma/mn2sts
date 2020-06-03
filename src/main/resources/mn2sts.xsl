@@ -1052,7 +1052,8 @@
 																																										*[local-name() = 'terms']/*[local-name() = 'clause'] |
 																																										*[local-name() = 'terms']/*[local-name() = 'definitions'] |
 																																										*[local-name() = 'definitions']/*[local-name() = 'clause'] |
-																																										*[local-name() = 'clause']/*[local-name() = 'definitions']"/>
+																																										*[local-name() = 'clause']/*[local-name() = 'definitions'] |
+																																										*[local-name() = 'definitions']/*[local-name() = 'definitions']"/>
 							</xsl:variable>
 							<xsl:variable name="addon">
 								<xsl:choose>
