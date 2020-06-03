@@ -51,10 +51,10 @@ documents/%.sts.xml: documents/%.mn.xml target/$(JAR_FILE) | documents
 	java -jar target/$(JAR_FILE) --xml-file-in $< --xml-file-out $@
 
 mn2stsDTD_NISO: documents/iso-rice-en.cd.sts.xml target/$(JAR_FILE) | documents
-	java -jar target/$(JAR_FILE) --xml-file-in $< --xml-file-out $< --check-type dtd-niso
+	java -jar target/$(JAR_FILE) --xml-file-in $< --check-type dtd-niso
 
 mn2stsDTD_ISO: documents/iso-rice-en.cd.sts.xml target/$(JAR_FILE) | documents
-	java -jar target/$(JAR_FILE) --xml-file-in $< --xml-file-out $< --check-type dtd-iso
+	java -jar target/$(JAR_FILE) --xml-file-in $< --check-type dtd-iso
 
 saxon.jar:
 	curl -sSL $(SAXON_URL) -o $@
