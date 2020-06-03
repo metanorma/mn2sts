@@ -918,13 +918,34 @@
 			<xsl:call-template name="getId"/>
 		</xsl:variable>
 		<xsl:variable name="id" select="xalan:nodeset($elements)//element[@source_id = $current_id]/@id"/>
-		<graphic xlink:href="{$id}">
-			<xsl:processing-instruction name="isoimg-id">
+		<!-- NISO STS TagLibrary: https://www.niso-sts.org/TagLibrary/niso-sts-TL-1-0-html/element/graphic.html -->
+		<graphic id="{$id}" xlink:href="{$id}">
+			<!-- <xsl:copy-of select="@mimetype"/> -->
+			<xsl:apply-templates select="@*"/>
+			<!-- <xsl:processing-instruction name="isoimg-id">
 				<xsl:value-of select="@src"/>
-			</xsl:processing-instruction>
+			</xsl:processing-instruction> -->
 			
 		</graphic>
 	</xsl:template>
+	
+	<xsl:template match="*[local-name() = 'image']/@src">
+		<xsl:attribute name="xlink:href">
+			<xsl:value-of select="."/>
+		</xsl:attribute>
+	</xsl:template>
+	
+	<xsl:template match="*[local-name() = 'image']/@mimetype">
+		<xsl:copy-of select="."/>
+	</xsl:template> <!-- created image processing -->
+	<xsl:template match="*[local-name() = 'image']/@alt">
+		<xsl:element name="alt-text">
+			<xsl:value-of select="."/>
+		</xsl:element>
+	</xsl:template>
+	<xsl:template match="*[local-name() = 'image']/@height"/>	
+	<xsl:template match="*[local-name() = 'image']/@width"/>	
+	
 	
 	<xsl:template match="*[local-name() = 'formula']">
 		<xsl:apply-templates />
