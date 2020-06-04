@@ -782,7 +782,7 @@
 	
 	<!-- https://github.com/metanorma/mn2sts/issues/10 -->
 	<xsl:template match="*[local-name() = 'appendix']">
-		<sec id="{@id}">
+		<sec id="{@id}" sec-type="appendix">
 			<xsl:apply-templates/>
 		</sec>
 	</xsl:template>
