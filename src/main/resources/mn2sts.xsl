@@ -1009,10 +1009,16 @@
 
 	<xsl:template match="*[local-name() = 'sourcecode']">
 		<code>
+			<xsl:apply-templates select="@*"/>
 			<xsl:apply-templates/>
 		</code>
 	</xsl:template>
 		
+	<xsl:template match="*[local-name() = 'sourcecode']/@lang">
+		<xsl:attribute name="language">
+			<xsl:value-of select="."/>
+		</xsl:attribute>
+	</xsl:template>
 	
 	<xsl:template name="getLevel">
 		<xsl:variable name="level_total" select="count(ancestor::*)"/>
