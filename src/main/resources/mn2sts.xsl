@@ -179,7 +179,7 @@
 			
 			<front>
 				<xsl:apply-templates select="*[local-name() = 'bibdata']" mode="front"/>
-				<xsl:apply-templates select="*[local-name() = 'preface']" mode="front"/>
+				<xsl:apply-templates select="*[local-name() = 'preface']" mode="front_preface"/>
 			</front>
 			
 			
@@ -230,22 +230,33 @@
 		<iso-meta>
 			<xsl:for-each select="*[local-name() = 'title'][generate-id(.)=generate-id(key('klang',@language)[1])]">
 				<title-wrap xml:lang="{@language}">
-					<xsl:variable name="title-intro" select="/*/*[local-name() = 'bibdata']/*[local-name() = 'title'][@language = current()/@language and @type = 'title-intro']"/>
-					<intro><xsl:value-of select="$title-intro"/></intro>
-					<xsl:variable name="title-main" select="/*/*[local-name() = 'bibdata']/*[local-name() = 'title'][@language = current()/@language and @type = 'title-main']"/>
-					<main><xsl:value-of select="$title-main"/></main>
-					<xsl:variable name="title-part" select="/*/*[local-name() = 'bibdata']/*[local-name() = 'title'][@language = current()/@language and @type = 'title-part']"/>
-					<compl><xsl:value-of select="$title-part"/></compl>
+				
+					<xsl:variable name="title-intro">
+						 <xsl:apply-templates select="/*/*[local-name() = 'bibdata']/*[local-name() = 'title'][@language = current()/@language and @type = 'title-intro']" mode="front"/>
+					</xsl:variable>
+					<intro><xsl:copy-of select="$title-intro"/></intro>
 					
-					<xsl:variable name="part" select="/*/*[local-name() = 'bibdata']/*[local-name() = 'ext']/*[local-name() = 'structuredidentifier']/*[local-name() = 'project-number']/@part"/>
+					<xsl:variable name="title-main">					
+						<xsl:apply-templates select="/*/*[local-name() = 'bibdata']/*[local-name() = 'title'][@language = current()/@language and @type = 'title-main']" mode="front"/>
+					</xsl:variable>
+					<main><xsl:copy-of select="$title-main"/></main>
+					
+					<xsl:variable name="title-part">
+						<xsl:apply-templates select="/*/*[local-name() = 'bibdata']/*[local-name() = 'title'][@language = current()/@language and @type = 'title-part']" mode="front"/>
+					</xsl:variable>
+					<compl><xsl:copy-of select="$title-part"/></compl>
+					
+					<xsl:variable name="part">
+						<xsl:apply-templates select="/*/*[local-name() = 'bibdata']/*[local-name() = 'ext']/*[local-name() = 'structuredidentifier']/*[local-name() = 'project-number']/@part" mode="front"/>
+					</xsl:variable>
 					
 					<xsl:variable name="full-title">
 						<xsl:if test="normalize-space($title-intro) != ''">
-							<xsl:value-of select="$title-intro"/>
+							<xsl:copy-of select="$title-intro"/>
 							<xsl:text> — </xsl:text>
 						</xsl:if>
-						<xsl:value-of select="$title-main"/>
-						<xsl:if test="normalize-space($title-part) != ''">
+						<xsl:copy-of select="$title-main"/>
+						<xsl:if test="normalize-space($title-part) != ''">							
 							<xsl:if test="$part != ''">
 								<xsl:text> — </xsl:text>															
 									<xsl:choose>
@@ -255,46 +266,217 @@
 									<xsl:value-of select="$part"/>
 									<xsl:text>: </xsl:text>															
 							</xsl:if>
-							<xsl:value-of select="$title-part"/>
+							<xsl:copy-of select="$title-part"/>
 						</xsl:if>
 					</xsl:variable>
-					<full><xsl:value-of select="$full-title"/></full>
+					<full><xsl:copy-of select="$full-title"/></full>
 				</title-wrap>
 			</xsl:for-each>
+			
 			<doc-ident>
-				<sdo><xsl:value-of select="*[local-name() = 'contributor'][*[local-name() = 'role']/@type='author']/*[local-name() = 'organization']/*[local-name() = 'abbreviation']"/></sdo>
-				<proj-id><xsl:value-of select="*[local-name() = 'ext']/*[local-name() = 'structuredidentifier']/*[local-name() = 'project-number']"/></proj-id>
-				<language><xsl:value-of select="*[local-name() = 'language']"/></language>
-				<release-version><xsl:value-of select="*[local-name() = 'status']/*[local-name() = 'stage']/@abbreviation"/></release-version>
+				<sdo>
+					<xsl:apply-templates select="*[local-name() = 'contributor'][*[local-name() = 'role']/@type='author']/*[local-name() = 'organization']/*[local-name() = 'abbreviation']" mode="front"/>
+				</sdo>
+				<proj-id>
+					<xsl:apply-templates select="*[local-name() = 'ext']/*[local-name() = 'structuredidentifier']/*[local-name() = 'project-number']" mode="front"/>
+				</proj-id>
+				<language>
+					<xsl:apply-templates select="*[local-name() = 'language']" mode="front"/>
+					</language>
+				<release-version>
+					<xsl:apply-templates select="*[local-name() = 'status']/*[local-name() = 'stage']/@abbreviation" mode="front"/>
+				</release-version>
 			</doc-ident>
+			
 			<std-ident>
-				<originator><xsl:value-of select="*[local-name() = 'contributor'][*[local-name() = 'role']/@type='publisher']/*[local-name() = 'organization']/*[local-name() = 'abbreviation']"/></originator>
-				<doc-type><xsl:value-of select="*[local-name() = 'ext']/*[local-name() = 'doctype']"/></doc-type>
-				<doc-number><xsl:value-of select="*[local-name() = 'docnumber']"/></doc-number>
-				<part-number><xsl:value-of select="*[local-name() = 'ext']/*[local-name() = 'structuredidentifier']/*[local-name() = 'partnumber']"/></part-number>
-				<edition><xsl:value-of select="*[local-name() = 'edition']"/></edition>
-				<version><xsl:value-of select="*[local-name() = 'version']/*[local-name() = 'revision-date']"/></version>
+				<originator>
+					<xsl:apply-templates select="*[local-name() = 'contributor'][*[local-name() = 'role']/@type='publisher']/*[local-name() = 'organization']/*[local-name() = 'abbreviation']" mode="front"/>
+				</originator>
+				<doc-type>
+					<xsl:apply-templates select="*[local-name() = 'ext']/*[local-name() = 'doctype']" mode="front"/>
+				</doc-type>
+				<doc-number>					
+					<xsl:apply-templates select="*[local-name() = 'docnumber']" mode="front"/>
+				</doc-number>
+				<part-number>
+					<xsl:apply-templates select="*[local-name() = 'ext']/*[local-name() = 'structuredidentifier']/*[local-name() = 'partnumber']" mode="front"/>
+				</part-number>
+				<edition>
+					<xsl:apply-templates select="*[local-name() = 'edition']" mode="front"/>
+				</edition>
+				<version>
+					<xsl:apply-templates select="*[local-name() = 'version']/*[local-name() = 'revision-date']" mode="front"/>
+				</version>
 			</std-ident>
-			<content-language><xsl:value-of select="*[local-name() = 'language']"/></content-language>
-			<std-ref type="dated"><xsl:value-of select="*[local-name() = 'docidentifier']"/></std-ref>
-			<std-ref type="undated"><xsl:value-of select="substring-before(*[local-name() = 'docidentifier'], ':')"/></std-ref>
-			<doc-ref><xsl:value-of select="*[local-name() = 'docidentifier'][@type='iso-with-lang']"/></doc-ref>
-			<release-date><xsl:value-of select="*[local-name() = 'date'][@type='published']/*[local-name() = 'on']"/></release-date>
-			<comm-ref><xsl:value-of select="concat(*[local-name() = 'copyright']/*[local-name() = 'owner']/*[local-name() = 'organization']/*[local-name() = 'abbreviation'], 
+			
+			<content-language>
+				<xsl:apply-templates select="*[local-name() = 'language']" mode="front"/>
+			</content-language>
+			<std-ref type="dated">
+				<xsl:apply-templates select="*[local-name() = 'docidentifier'][1]" mode="front"/>
+			</std-ref>
+			<std-ref type="undated">
+				<xsl:value-of select="substring-before(*[local-name() = 'docidentifier'], ':')"/>
+			</std-ref>
+			<doc-ref>
+				<xsl:apply-templates select="*[local-name() = 'docidentifier'][@type='iso-with-lang']" mode="front"/>
+			</doc-ref>
+			<release-date>
+				<xsl:apply-templates select="*[local-name() = 'date'][@type='published']/*[local-name() = 'on']" mode="front"/>
+			</release-date>
+			<comm-ref>
+				<xsl:apply-templates select="*[local-name() = 'copyright']/*[local-name() = 'owner']/*[local-name() = 'organization']/*[local-name() = 'abbreviation']" mode="front"/>
+				<xsl:apply-templates select="*[local-name() = 'ext']/*[local-name() = 'editorialgroup']/*[local-name() = 'technical-committee']" mode="front"/>
+				<xsl:apply-templates select="*[local-name() = 'ext']/*[local-name() = 'editorialgroup']/*[local-name() = 'subcommittee']" mode="front"/>
+				<xsl:apply-templates select="*[local-name() = 'ext']/*[local-name() = 'editorialgroup']/*[local-name() = 'workgroup']" mode="front"/>
+<!-- 				<xsl:value-of select="concat(
 										'/', *[local-name() = 'ext']/*[local-name() = 'editorialgroup']/*[local-name() = 'technical-committee']/@type, ' ',
 										*[local-name() = 'ext']/*[local-name() = 'editorialgroup']/*[local-name() = 'technical-committee']/@number)"/>
+ -->				
 			</comm-ref>
-			<secretariat><xsl:value-of select="*[local-name() = 'ext']/*[local-name() = 'editorialgroup']/*[local-name() = 'secretariat']"/></secretariat>				
-			<ics><xsl:value-of select="*[local-name() = 'ext']/*[local-name() = 'editorialgroup']/*[local-name() = 'ics']/*[local-name() = 'code']"/></ics>
+			<secretariat>
+				<xsl:apply-templates select="*[local-name() = 'ext']/*[local-name() = 'editorialgroup']/*[local-name() = 'secretariat']" mode="front"/>
+			</secretariat>				
+			<ics>
+				<xsl:apply-templates select="*[local-name() = 'ext']/*[local-name() = 'ics']/*[local-name() = 'code']" mode="front"/>
+			</ics>
 			<permissions>
 				<copyright-statement>All rights reserved</copyright-statement>
-				<copyright-year><xsl:value-of select="*[local-name() = 'copyright']/*[local-name() = 'from']"/></copyright-year>
-				<copyright-holder><xsl:value-of select="*[local-name() = 'copyright']/*[local-name() = 'owner']/*[local-name() = 'organization']/*[local-name() = 'abbreviation']"/></copyright-holder>
+				<copyright-year>
+					<xsl:apply-templates select="*[local-name() = 'copyright']/*[local-name() = 'from']" mode="front"/>
+				</copyright-year>
+				<copyright-holder>
+					<xsl:apply-templates select="*[local-name() = 'copyright']/*[local-name() = 'owner']/*[local-name() = 'organization']/*[local-name() = 'abbreviation']" mode="front"/>
+				</copyright-holder>
 			</permissions>
+			
+			<!-- check non-processed elements in bibdata -->
+			<xsl:variable name="front_check">
+				<xsl:apply-templates mode="front_check"/>
+			</xsl:variable>			
+			<xsl:if test="normalize-space($front_check) != '' or count(xalan:nodeset($front_check)/*) &gt; 0">
+				<xsl:text>WARNING! There are unprocessed elements in bibdata:
+				</xsl:text>
+				<xsl:apply-templates select="xalan:nodeset($front_check)" mode="display_check"/>
+			</xsl:if>
 		</iso-meta>
 	</xsl:template>
 	
-	<xsl:template match="*[local-name() = 'preface']/*" mode="front">
+	<xsl:template match="@*|node()" mode="display_check">
+		<xsl:copy>
+				<xsl:apply-templates select="@*|node()" mode="display_check"/>
+		</xsl:copy>
+	</xsl:template>
+	<xsl:template match="text()"  mode="display_check">
+		<xsl:value-of select="normalize-space(.)"/>
+	</xsl:template>
+	
+	<xsl:template match="@*" mode="front">
+		<xsl:value-of select="."/>
+	</xsl:template>	
+	<xsl:template match="text()" mode="front">
+		<xsl:value-of select="."/>
+	</xsl:template>
+	<xsl:template match="*" mode="front">
+		<xsl:apply-templates />
+	</xsl:template>
+	
+	<xsl:template match="*[local-name() = 'ext']/*[local-name() = 'editorialgroup']/*[local-name() = 'technical-committee'] |
+																*[local-name() = 'ext']/*[local-name() = 'editorialgroup']/*[local-name() = 'subcommittee'] |
+																*[local-name() = 'ext']/*[local-name() = 'editorialgroup']/*[local-name() = 'workgroup']" mode="front">
+		<xsl:if test="normalize-space(@type) != '' or normalize-space(@number) != ''">
+			<xsl:text>/</xsl:text>
+			<xsl:choose>
+				<xsl:when test="normalize-space(@type) != ''">
+					<xsl:value-of select="@type"/>
+				</xsl:when>
+				<xsl:otherwise>
+					<xsl:choose>
+						<xsl:when test="local-name() = 'technical-committee'">TC</xsl:when>
+						<xsl:when test="local-name() = 'subcommittee'">SC</xsl:when>
+						<xsl:when test="local-name() = 'workgroup'">WG</xsl:when>
+					</xsl:choose>
+				</xsl:otherwise>
+			</xsl:choose>
+			<xsl:if test="normalize-space(@number) != ''">
+				<xsl:value-of select="concat(' ', @number)"/>
+			</xsl:if>
+		</xsl:if>
+	</xsl:template>
+	
+
+	<!-- skip processed ^ attributes  and stop -->
+	<xsl:template match="*[local-name() = 'bibdata']/*[local-name() = 'ext']/*[local-name() = 'structuredidentifier']/*[local-name() = 'project-number']/@part |
+																*[local-name() = 'status']/*[local-name() = 'stage']/@abbreviation |
+																*[local-name() = 'ext']/*[local-name() = 'editorialgroup']/*[local-name() = 'technical-committee']/@type |
+																*[local-name() = 'ext']/*[local-name() = 'editorialgroup']/*[local-name() = 'technical-committee']/@number" 
+																mode="front_check"/>
+	
+	<!-- skip processed ^ elements and stop -->
+	<xsl:template match="*[local-name() = 'bibdata']/*[local-name() = 'title'][@type = 'title-intro'] |
+																*[local-name() = 'bibdata']/*[local-name() = 'title'][@type = 'title-main'] |
+																*[local-name() = 'bibdata']/*[local-name() = 'title'][@type = 'title-part'] |
+																*[local-name() = 'bibdata']/*[local-name() = 'title'][@type = 'main'] |
+																*[local-name() = 'contributor'][*[local-name() = 'role']/@type='author']/*[local-name() = 'organization']/*[local-name() = 'abbreviation'] |																
+																*[local-name() = 'contributor'][*[local-name() = 'role']/@type='author']/*[local-name() = 'organization']/*[local-name() = 'name'] |
+																*[local-name() = 'ext']/*[local-name() = 'structuredidentifier']/*[local-name() = 'project-number'] |
+																*[local-name() = 'language'] |
+																*[local-name() = 'script'] |
+																*[local-name() = 'contributor'][*[local-name() = 'role']/@type='publisher']/*[local-name() = 'organization']/*[local-name() = 'abbreviation'] |																
+																*[local-name() = 'contributor'][*[local-name() = 'role']/@type='publisher']/*[local-name() = 'organization']/*[local-name() = 'name'] |
+																*[local-name() = 'status']/*[local-name() = 'stage'] |
+																*[local-name() = 'status']/*[local-name() = 'substage'] |
+																*[local-name() = 'ext']/*[local-name() = 'doctype'] |
+																*[local-name() = 'docnumber'] |
+																*[local-name() = 'ext']/*[local-name() = 'structuredidentifier']/*[local-name() = 'partnumber'] |
+																*[local-name() = 'edition'] |
+																*[local-name() = 'version']|
+																*[local-name() = 'version']/*[local-name() = 'revision-date'] |
+																*[local-name() = 'language'] |
+																*[local-name() = 'docidentifier'] |
+																*[local-name() = 'docidentifier'][@type='iso-with-lang'] |
+																*[local-name() = 'date'][@type='published']/*[local-name() = 'on'] |
+																*[local-name() = 'bibdata']/*[local-name() = 'copyright']/*[local-name() = 'owner']/*[local-name() = 'organization']/*[local-name() = 'abbreviation'] |
+																*[local-name() = 'bibdata']/*[local-name() = 'copyright']/*[local-name() = 'owner']/*[local-name() = 'organization']/*[local-name() = 'name'] |
+																*[local-name() = 'ext']/*[local-name() = 'editorialgroup']/*[local-name() = 'secretariat'] |
+																*[local-name() = 'ext']/*[local-name() = 'stagename']|
+																*[local-name() = 'ext']/*[local-name() = 'ics']/*[local-name() = 'code'] | 
+																*[local-name() = 'copyright']/*[local-name() = 'from'] |
+																*[local-name() = 'ext']/*[local-name() = 'structuredidentifier'] |
+																*[local-name() = 'ext']/*[local-name() = 'editorialgroup']/*[local-name() = 'technical-committee'] |
+																*[local-name() = 'ext']/*[local-name() = 'editorialgroup']/*[local-name() = 'subcommittee'] |
+																*[local-name() = 'ext']/*[local-name() = 'editorialgroup']/*[local-name() = 'workgroup']"
+																mode="front_check"/>
+
+	<!-- skip processed structure and deep down -->
+	<xsl:template match="*[local-name() = 'contributor'][*[local-name() = 'role']/@type='author'] |
+																*[local-name() = 'contributor']/*[local-name() = 'role'][@type='author'] |
+																*[local-name() = 'contributor'][*[local-name() = 'role']/@type='author']/*[local-name() = 'organization'] | 
+																*[local-name() = 'contributor'][*[local-name() = 'role']/@type='publisher'] |
+																*[local-name() = 'contributor']/*[local-name() = 'role'][@type='publisher'] |
+																*[local-name() = 'contributor'][*[local-name() = 'role']/@type='publisher']/*[local-name() = 'organization'] |
+																*[local-name() = 'bibdata']/*[local-name() = 'status'] |																
+																*[local-name() = 'bibdata']/*[local-name() = 'copyright'] |
+																*[local-name() = 'bibdata']/*[local-name() = 'copyright']/*[local-name() = 'owner'] |
+																*[local-name() = 'bibdata']/*[local-name() = 'copyright']/*[local-name() = 'owner']/*[local-name() = 'organization'] |
+																*[local-name() = 'ext']/*[local-name() = 'editorialgroup'] |
+																*[local-name() = 'ext']/*[local-name() = 'ics'] |
+																*[local-name() = 'ext']
+																" mode="front_check">
+		<xsl:apply-templates mode="front_check"/>
+	</xsl:template>
+	
+	<xsl:template match="@*|node()" mode="front_check">
+		<xsl:copy>
+				<xsl:apply-templates select="@*|node()" mode="front_check"/>
+		</xsl:copy>
+	</xsl:template>
+	<xsl:template match="text()" mode="front_check">
+		<xsl:value-of select="."/>
+	</xsl:template>
+	
+	
+	<xsl:template match="*[local-name() = 'preface']/*" mode="front_preface">
 		<xsl:variable name="name" select="local-name()"/>
 		<xsl:variable name="sec_type">
 			<xsl:choose>
