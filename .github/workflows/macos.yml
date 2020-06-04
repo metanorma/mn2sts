@@ -26,6 +26,10 @@ jobs:
           # Install Maven
           brew install maven yq
 
+      - name: Install yq
+        run: |
+          brew install yq
+
       - name: Run tests
         run: |
           make test
