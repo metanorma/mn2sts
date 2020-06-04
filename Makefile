@@ -23,9 +23,9 @@ src/test/resources/iso-tc154-8601-1-en.mn.xml: tests/iso-8601-1/documents/iso-tc
 	cp $< $@
 
 tests/iso-8601-1/documents/iso-tc154-8601-1-en.xml:
-	pushd tests/iso-8601-1; \
+	cd tests/iso-8601-1; \
 	$(MAKE) all; \
-	popd
+	cd ../..
 
 src/test/resources/iso-rice-en.cd.mn.xml: tests/mn-samples-iso/documents/international-standard/rice-en.cd.xml
 	cp $< $@
