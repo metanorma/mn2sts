@@ -92,9 +92,9 @@
 			<xsl:variable name="id">
 				<xsl:choose>
 					<xsl:when test="$change_id = 'false'"><xsl:value-of select="$source_id"/></xsl:when>
+					<xsl:when test="$name = 'li'"><xsl:value-of select="$source_id"/></xsl:when>
 					<xsl:otherwise>
-						<xsl:choose>
-							
+						<xsl:choose>							
 							<xsl:when test="$name = 'clause' or 
 																			($name = 'references' and @id = '_normative_references') or 
 																			$name = 'annex' or
@@ -102,8 +102,7 @@
 																			$name = 'term' or 
 																			$name = 'definitions' or 
 																			$name = 'ul' or 
-																			$name = 'ol' or 
-																			$name = 'li'">sec_</xsl:when>
+																			$name = 'ol'">sec_</xsl:when>
 							<xsl:when test="$name = 'fn'">fn_</xsl:when>
 							<xsl:when test="$name = 'preferred' or 
 																			$name = 'admitted' or 
