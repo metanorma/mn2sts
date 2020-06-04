@@ -7,6 +7,10 @@
 
 	<xsl:param name="debug">false</xsl:param>
 	<xsl:variable name="change_id">true</xsl:variable>
+	
+	<xsl:variable name="lower">abcdefghijklmnopqrstuvwxyz</xsl:variable> 
+	<xsl:variable name="upper">ABCDEFGHIJKLMNOPQRSTUVWXYZ</xsl:variable>
+	
 	<!-- ====================================================================== -->
 	<!-- ====================================================================== -->
 	<xsl:variable name="elements">
@@ -741,19 +745,12 @@
 		</xref>
 	</xsl:template>
 	
-
-	<!-- need to be tested (find original NISO) -->
 	<!-- https://github.com/metanorma/mn2sts/issues/8 -->
 	<xsl:template match="*[local-name() = 'admonition']">
-		<p id="{@id}">
-			<xsl:attribute name="content-type">
-				<xsl:value-of select="@type"/>
-			</xsl:attribute>			
+		<non-normative-note id="{@id}">
+			<label><xsl:value-of select="translate(@type, $lower, $upper)"/></label>
 			<xsl:apply-templates />
-		</p>
-	</xsl:template>
-	<xsl:template match="*[local-name() = 'admonition']/*[local-name() = 'p']">
-		<xsl:apply-templates />
+		</non-normative-note>
 	</xsl:template>
 	
 	<!-- https://github.com/metanorma/mn2sts/issues/9 -->
