@@ -1,9 +1,5 @@
 #!make
-ifeq ($(OS),Windows_NT)
-SHELL = cmd
-else
 SHELL ?= /bin/bash
-endif
 
 JAR_VERSION := $(shell mvn -q -Dexec.executable="echo" -Dexec.args='$${project.version}' --non-recursive exec:exec -DforceStdout)
 #JAR_VERSION := 1.0
@@ -28,7 +24,7 @@ src/test/resources/iso-tc154-8601-1-en.mn.xml: tests/iso-8601-1/documents/iso-tc
 
 tests/iso-8601-1/documents/iso-tc154-8601-1-en.xml:
 ifeq ($(OS),Windows_NT)
-	$(MAKE) -C tests/iso-8601-1 -f Makefile.win all
+	$(MAKE) -C tests/iso-8601-1 -f Makefile.win all SHELL=cmd
 else
 	$(MAKE) -C tests/iso-8601-1 all
 endif
@@ -38,7 +34,7 @@ src/test/resources/iso-rice-en.cd.mn.xml: tests/mn-samples-iso/documents/interna
 
 tests/mn-samples-iso/documents/international-standard/rice-en.cd.xml:
 ifeq ($(OS),Windows_NT)
-	$(MAKE) -C tests/mn-samples-iso -f Makefile.win all
+	$(MAKE) -C tests/mn-samples-iso -f Makefile.win all SHELL=cmd
 else
 	$(MAKE) -C tests/mn-samples-iso all
 endif

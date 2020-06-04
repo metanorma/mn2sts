@@ -24,7 +24,7 @@ jobs:
       - name: Setup prerequisites
         run: |
           # Install Maven
-          brew install maven
+          brew install maven yq
 
       - name: Run tests
         run: |
