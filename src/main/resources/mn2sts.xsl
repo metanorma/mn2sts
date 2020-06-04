@@ -582,7 +582,7 @@
 				<xsl:apply-templates />
 			</xsl:when>
 			<xsl:otherwise>
-				<p>
+				<p id="{@id}">
 					<xsl:apply-templates />
 				</p>
 			</xsl:otherwise>
@@ -753,30 +753,50 @@
 		</non-normative-note>
 	</xsl:template>
 	
+	
 	<!-- https://github.com/metanorma/mn2sts/issues/9 -->
-	<xsl:template match="*[local-name() = 'quote2']">
-		<disp-quote>
-			<xsl:apply-templates/>
-		</disp-quote>
-	</xsl:template>
 	<xsl:template match="*[local-name() = 'quote']">
-		<sec id="{@id}">
-			<xsl:apply-templates/>
-		</sec>
-	</xsl:template>
-	<!-- need to be tested (find original NISO) -->
-	<xsl:template match="*[local-name() = 'quote']/*[local-name() = 'source']">		
-		<title>
-			<xsl:value-of select="@citeas"/>
-			<xsl:apply-templates select="*[local-name() = 'localityStack']"/>			
-		</title>
-	</xsl:template>
-	<xsl:template match="*[local-name() = 'quote']/*[local-name() = 'author']">
-		<p>
-			<xsl:apply-templates/>
-		</p>
+		<disp-quote id="{@id}">
+			<xsl:apply-templates select="*[local-name() = 'p']"/>
+			<xsl:if test="*[local-name() = 'source'] or *[local-name() = 'author']">
+				<related-object>
+					<xsl:apply-templates select="*[local-name() = 'author']" mode="disp-quote"/>
+					<xsl:if test="*[local-name() = 'source'] and *[local-name() = 'author']">, </xsl:if>
+					<xsl:apply-templates select="*[local-name() = 'source']" mode="disp-quote"/>
+				</related-object>
+			</xsl:if>
+		</disp-quote>
+	</xsl:template>	
+	<xsl:template match="*[local-name() = 'quote']/*[local-name() = 'source']"/>
+	<xsl:template match="*[local-name() = 'quote']/*[local-name() = 'author']"/>
+	
+	<xsl:template match="*[local-name() = 'quote']/*[local-name() = 'author']" mode="disp-quote">
+		<xsl:apply-templates />
 	</xsl:template>
 	
+	<xsl:template match="*[local-name() = 'quote']/*[local-name() = 'source']" mode="disp-quote">
+		<xsl:value-of select="@citeas"/>
+		<xsl:apply-templates mode="disp-quote"/>
+	</xsl:template>
+	
+	<xsl:template match="*[local-name() = 'localityStack']" mode="disp-quote">		
+		<xsl:for-each select="*[local-name()='locality']">
+			<xsl:if test="position() =1"><xsl:text>, </xsl:text></xsl:if>
+			<xsl:apply-templates select="." mode="disp-quote"/>
+			<xsl:if test="position() != last()"><xsl:text>; </xsl:text></xsl:if>
+		</xsl:for-each>	
+	</xsl:template>
+	
+	<xsl:template match="*[local-name() = 'locality']"  mode="disp-quote">
+		<xsl:choose>
+			<xsl:when test="@type ='clause'">Clause </xsl:when>
+			<xsl:when test="@type ='annex'">Annex </xsl:when>
+			<xsl:otherwise><xsl:value-of select="@type"/></xsl:otherwise>
+		</xsl:choose>
+		<xsl:value-of select="*[local-name() = 'referenceFrom']"/>
+	</xsl:template>
+	
+
 	<!-- https://github.com/metanorma/mn2sts/issues/10 -->
 	<xsl:template match="*[local-name() = 'appendix']">
 		<sec id="{@id}" sec-type="appendix">
