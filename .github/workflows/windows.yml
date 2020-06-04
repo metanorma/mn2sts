@@ -21,7 +21,7 @@ jobs:
           java-version: 1.8
 
       - name: Setup prerequisites
-        run: choco install --no-progress make gnuwin32-coreutils.install
+        run: choco install --no-progress make gnuwin32-coreutils.install curl
 
       - name: Use Metanorma
         shell: pwsh
@@ -36,24 +36,24 @@ jobs:
           gem install bundler
       - name: Metanorma compile
         run: |
-          make -f Makefile.win clean all SHELL=cmd
+          make clean all
 
       - name: Run tests
         run: |
-          make test SHELL=cmd
+          make test
 
       - name: Build
         run: |
-          make all SHELL=cmd
+          make all
 
       - name: Test against DTD NISO
         run: |
-          make mn2stsDTD_NISO SHELL=cmd
+          make mn2stsDTD_NISO
 
       - name: Test against DTD ISO
         run: |
-          make mn2stsDTD_ISO SHELL=cmd
+          make mn2stsDTD_ISO
 
       - name: Compile output
         run: |
-          make publish SHELL=cmd
+          make publish

@@ -1,5 +1,9 @@
 #!make
+ifeq ($(OS),Windows_NT)
+SHELL = cmd
+else
 SHELL ?= /bin/bash
+endif
 
 JAR_VERSION := $(shell mvn -q -Dexec.executable="echo" -Dexec.args='$${project.version}' --non-recursive exec:exec -DforceStdout)
 #JAR_VERSION := 1.0
@@ -23,14 +27,21 @@ src/test/resources/iso-tc154-8601-1-en.mn.xml: tests/iso-8601-1/documents/iso-tc
 	cp $< $@
 
 tests/iso-8601-1/documents/iso-tc154-8601-1-en.xml:
-	cd tests/iso-8601-1; \
-	$(MAKE) all; \
-	cd ../..
+ifeq ($(OS),Windows_NT)
+	$(MAKE) -C tests/iso-8601-1 -f Makefile.win all
+else
+	$(MAKE) -C tests/iso-8601-1 all
+endif
 
 src/test/resources/iso-rice-en.cd.mn.xml: tests/mn-samples-iso/documents/international-standard/rice-en.cd.xml
 	cp $< $@
 
 tests/mn-samples-iso/documents/international-standard/rice-en.cd.xml:
+ifeq ($(OS),Windows_NT)
+	$(MAKE) -C tests/mn-samples-iso -f Makefile.win all
+else
+	$(MAKE) -C tests/mn-samples-iso all
+endif
 
 documents/%.mn.xml: src/test/resources/%.mn.xml
 	cp $< $@
@@ -50,6 +61,17 @@ documents/%.sts.html: documents/%.sts.xml saxon.jar
 documents/%.sts.xml: documents/%.mn.xml target/$(JAR_FILE) | documents
 	java -jar target/$(JAR_FILE) --xml-file-in $< --xml-file-out $@
 
+ifeq ($(OS),Windows_NT)
+mn2stsDTD_NISO: target/$(JAR_FILE) $(DESTSTSXML) | documents
+	FOR /f "tokens=1* delims= " %%file IN ("$(filter-out $<,$^)") DO ( &
+		java -jar $< --xml-file-in %%file --check-type dtd-niso &
+	)
+
+mn2stsDTD_ISO: target/$(JAR_FILE) $(DESTSTSXML) | documents
+	FOR /f "tokens=1* delims= " %%file IN ("$(filter-out $<,$^)") DO ( &
+		java -jar $< --xml-file-in %%file --check-type dtd-iso &
+	)
+else
 mn2stsDTD_NISO: target/$(JAR_FILE) $(DESTSTSXML) | documents
 	for file in $(filter-out $<,$^); do \
 	java -jar $< --xml-file-in $${file} --check-type dtd-niso; \
@@ -59,6 +81,7 @@ mn2stsDTD_ISO: target/$(JAR_FILE) $(DESTSTSXML) | documents
 	for file in $(filter-out $<,$^); do \
 	java -jar $< --xml-file-in $${file} --check-type dtd-iso; \
 	done
+endif
 
 saxon.jar:
 	curl -sSL $(SAXON_URL) -o $@
@@ -79,12 +102,12 @@ documents:
 	mkdir -p $@
 
 clean:
-	mvn clean; \
+	mvn clean
 	rm -rf documents
 
 publish: published
 published: documents.html
-	mkdir published && \
-	cp -a documents $@/
+	mkdir published
+	cp -a documents $@
 
 .PHONY: all clean test deploy version publish
