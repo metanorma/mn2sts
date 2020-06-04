@@ -50,11 +50,15 @@ documents/%.sts.html: documents/%.sts.xml saxon.jar
 documents/%.sts.xml: documents/%.mn.xml target/$(JAR_FILE) | documents
 	java -jar target/$(JAR_FILE) --xml-file-in $< --xml-file-out $@
 
-mn2stsDTD_NISO: documents/iso-rice-en.cd.sts.xml target/$(JAR_FILE) | documents
-	java -jar target/$(JAR_FILE) --xml-file-in $< --check-type dtd-niso
+mn2stsDTD_NISO: target/$(JAR_FILE) $(DESTSTSXML) | documents
+	for file in $(filter-out $<,$^); do \
+	java -jar $< --xml-file-in $${file} --check-type dtd-niso; \
+	done
 
-mn2stsDTD_ISO: documents/iso-rice-en.cd.sts.xml target/$(JAR_FILE) | documents
-	java -jar target/$(JAR_FILE) --xml-file-in $< --check-type dtd-iso
+mn2stsDTD_ISO: target/$(JAR_FILE) $(DESTSTSXML) | documents
+	for file in $(filter-out $<,$^); do \
+	java -jar $< --xml-file-in $${file} --check-type dtd-iso; \
+	done
 
 saxon.jar:
 	curl -sSL $(SAXON_URL) -o $@
