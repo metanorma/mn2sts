@@ -341,13 +341,15 @@
 				<xsl:apply-templates select="*[local-name() = 'ext']/*[local-name() = 'ics']/*[local-name() = 'code']" mode="front"/>
 			</ics>
 			<permissions>
-				<copyright-statement>All rights reserved</copyright-statement>
+				<!-- <copyright-statement>All rights reserved</copyright-statement> -->
+				<xsl:apply-templates select="/*[local-name() = 'iso-standard']/*[local-name() = 'boilerplate']/*[local-name() = 'copyright-statement']"/>
 				<copyright-year>
 					<xsl:apply-templates select="*[local-name() = 'copyright']/*[local-name() = 'from']" mode="front"/>
 				</copyright-year>
 				<copyright-holder>
 					<xsl:apply-templates select="*[local-name() = 'copyright']/*[local-name() = 'owner']/*[local-name() = 'organization']/*[local-name() = 'abbreviation']" mode="front"/>
 				</copyright-holder>
+				<xsl:apply-templates select="/*[local-name() = 'iso-standard']/*[local-name() = 'boilerplate']/*[local-name() = 'license-statement']"/>
 			</permissions>
 			
 			<!-- check non-processed elements in bibdata -->
@@ -473,6 +475,41 @@
 	</xsl:template>
 	<xsl:template match="text()" mode="front_check">
 		<xsl:value-of select="."/>
+	</xsl:template>
+	
+	<xsl:template match="*[local-name() = 'boilerplate']/*[local-name() = 'copyright-statement']">
+		<xsl:apply-templates/>
+	</xsl:template>
+	<xsl:template match="*[local-name() = 'boilerplate']/*[local-name() = 'copyright-statement']/*[local-name() = 'clause']" priority="1">
+		<xsl:apply-templates/>
+	</xsl:template>
+	<xsl:template match="*[local-name() = 'boilerplate']/*[local-name() = 'copyright-statement']//*[local-name() = 'p']"  priority="1">
+		<copyright-statement>
+			<xsl:apply-templates/>
+		</copyright-statement>
+	</xsl:template>	
+	<xsl:template match="*[local-name() = 'boilerplate']/*[local-name() = 'copyright-statement']//*[local-name() = 'p']//*[local-name() = 'br']"  priority="1">
+		<xsl:value-of select="'&#x2028;'"/><!-- linebreak -->
+	</xsl:template>	
+	
+	<xsl:template match="*[local-name() = 'boilerplate']/*[local-name() = 'license-statement']">
+		<license>
+			<xsl:for-each select="*[local-name() = 'clause'][1]/*[local-name() = 'title']">
+				<xsl:attribute name="xlink:title">
+					<xsl:value-of select="."/>
+				</xsl:attribute>
+			</xsl:for-each>
+			<xsl:apply-templates/>
+		</license>	
+	</xsl:template>
+	<xsl:template match="*[local-name() = 'boilerplate']/*[local-name() = 'license-statement']/*[local-name() = 'clause']/*[local-name() = 'title']" priority="1"/>
+	<xsl:template match="*[local-name() = 'boilerplate']/*[local-name() = 'license-statement']/*[local-name() = 'clause']" priority="1">
+		<xsl:apply-templates/>
+	</xsl:template>
+	<xsl:template match="*[local-name() = 'boilerplate']/*[local-name() = 'license-statement']//*[local-name() = 'p']" priority="1">
+		<license-p id="{@id}">
+			<xsl:apply-templates/>
+		</license-p>
 	</xsl:template>
 	
 	
