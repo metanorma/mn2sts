@@ -2,7 +2,6 @@
 SHELL ?= /bin/bash
 
 JAR_VERSION := $(shell mvn -q -Dexec.executable="echo" -Dexec.args='$${project.version}' --non-recursive exec:exec -DforceStdout)
-#JAR_VERSION := 1.0
 JAR_FILE := mn2sts-$(JAR_VERSION).jar
 
 SRCDIR := src/test/resources
@@ -57,27 +56,11 @@ documents/%.sts.html: documents/%.sts.xml saxon.jar
 documents/%.sts.xml: documents/%.mn.xml target/$(JAR_FILE) | documents
 	java -jar target/$(JAR_FILE) --xml-file-in $< --xml-file-out $@
 
-ifeq ($(OS),Windows_NT)
-mn2stsDTD_NISO: target/$(JAR_FILE) $(DESTSTSXML) | documents
-	FOR /f "tokens=1* delims= " %%file IN ("$(filter-out $<,$^)") DO ( &
-		java -jar $< --xml-file-in %%file --check-type dtd-niso &
-	)
+mn2stsDTD_NISO: documents/%.sts.xml target/$(JAR_FILE) | documents
+	java -jar target/$(JAR_FILE) --xml-file-in $< --check-type dtd-niso
 
-mn2stsDTD_ISO: target/$(JAR_FILE) $(DESTSTSXML) | documents
-	FOR /f "tokens=1* delims= " %%file IN ("$(filter-out $<,$^)") DO ( &
-		java -jar $< --xml-file-in %%file --check-type dtd-iso &
-	)
-else
-mn2stsDTD_NISO: target/$(JAR_FILE) $(DESTSTSXML) | documents
-	for file in $(filter-out $<,$^); do \
-	java -jar $< --xml-file-in $${file} --check-type dtd-niso; \
-	done
-
-mn2stsDTD_ISO: target/$(JAR_FILE) $(DESTSTSXML) | documents
-	for file in $(filter-out $<,$^); do \
-	java -jar $< --xml-file-in $${file} --check-type dtd-iso; \
-	done
-endif
+mn2stsDTD_ISO: documents/%.sts.xml target/$(JAR_FILE) | documents
+	java -jar target/$(JAR_FILE) --xml-file-in $< --check-type dtd-niso
 
 saxon.jar:
 	curl -sSL $(SAXON_URL) -o $@
@@ -95,7 +78,7 @@ documents.html: documents.rxl
 	bundle exec relaton xml2html documents.rxl
 
 documents:
-	mkdir -p $@
+	mkdir $@
 
 clean:
 	mvn clean
