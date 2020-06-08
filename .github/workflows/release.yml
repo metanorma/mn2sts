@@ -19,13 +19,13 @@ jobs:
 
       - uses: actions/checkout@master
 
-      - name: Build
-        run: |
-          make all
-
       - name: Run tests
         run: |
           make test
+
+      - name: Build
+        run: |
+          make all
 
       - name: Test against DTD NISO
         run: |
