@@ -33,6 +33,7 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.xml.sax.SAXParseException;
 
 /**
  * This class for the conversion of an XML file to PDF using FOP and JEuclid
@@ -173,15 +174,17 @@ public class mn2sts {
             
             // check agains XSD NISO, DTD NISO or DTD ISO
             checkSTS(xmlout, checkAgainst);
-            
-         
+                
+        } catch (SAXParseException e) {
+            System.err.println(e.toString());
+            System.exit(ERROR_EXIT_CODE);   
         } catch (Exception e) {
             e.printStackTrace(System.err);
             System.exit(ERROR_EXIT_CODE);
         }
     }
 
-    private void checkSTS(File xml, CheckAgainstEnum checkAgainst) {
+    private void checkSTS(File xml, CheckAgainstEnum checkAgainst) throws SAXParseException {
             
         List<String> exceptions = new LinkedList<>(); 
 
@@ -199,13 +202,21 @@ public class mn2sts {
         }
 
 
+        StringBuilder sbErrors = new StringBuilder();
         if (exceptions.isEmpty()) {
-            System.out.println(xml.getAbsolutePath() + " is valid.");
+            System.out.println(xml.getAbsolutePath() + " is valid.");            
         } else {
-            System.out.println(xml.getAbsolutePath() + " is NOT valid reason:");
+            sbErrors.append(xml.getAbsolutePath());
+            sbErrors.append(" is NOT valid reason:");
+            sbErrors.append("\n");
+            //System.out.println(xml.getAbsolutePath() + " is NOT valid reason:");
             exceptions.forEach((exception) -> {
-                System.out.println("[ERROR] " + exception);
-            });            
+                //System.out.println("[ERROR] " + exception);
+                sbErrors.append("[ERROR] ");
+                sbErrors.append(exception);
+                sbErrors.append("\n");
+            });
+            throw new SAXParseException(sbErrors.toString(), null);
         }   
     }
     
@@ -264,11 +275,16 @@ public class mn2sts {
                     mn2sts app = new mn2sts();
 
                     app.checkSTS(fXMLin, checkAgainst);
+                    
                     System.out.println("End!");
+                
+                } catch (SAXParseException e) {
+                    System.err.println(e.toString());
+                    System.exit(ERROR_EXIT_CODE);
                 } catch (Exception e) {
                     e.printStackTrace(System.err);
                     System.exit(ERROR_EXIT_CODE);
-                }               
+                }
                 cmdFail = false;
             } catch (ParseException exp) {
                 cmdFail = true;

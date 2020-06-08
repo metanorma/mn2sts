@@ -102,6 +102,7 @@ public class mn2stsTests {
     @Test
     // Element type "code" must be declared. etc...
     public void NoSuccessCheckDTD_ISO() throws ParseException {
+        exitRule.expectSystemExitWithStatus(-1);
         
         ClassLoader classLoader = getClass().getClassLoader();        
         String xml = classLoader.getResource(XMLFILE_STS).getFile();                
