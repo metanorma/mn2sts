@@ -15,6 +15,7 @@
 	<!-- ====================================================================== -->
 	<xsl:variable name="elements">
 		<elements>
+			<xsl:apply-templates select="/*/*[local-name() = 'preface']/node()" mode="elements"/>
 			<!-- Scope -->
 			<xsl:apply-templates select="/*/*[local-name() = 'sections']/*[local-name() = 'clause'][@id = '_scope']" mode="elements"> <!-- [1] -->
 				<xsl:with-param name="sectionNum" select="'1'"/>
@@ -119,10 +120,15 @@
 			
 			<xsl:variable name="section">
 				<xsl:choose>
-					<xsl:when test="$name = 'annex'">Annex <xsl:value-of select="$section_"/></xsl:when>
-					<xsl:when test="$name = 'table'">Table <xsl:value-of select="$section_"/></xsl:when>
-					<xsl:otherwise><xsl:value-of select="$section_"/></xsl:otherwise>
-				</xsl:choose>
+					<xsl:when test="$section_ = '0'"></xsl:when>
+					<xsl:otherwise>
+						<xsl:choose>
+							<xsl:when test="$name = 'annex'">Annex <xsl:value-of select="$section_"/></xsl:when>
+							<xsl:when test="$name = 'table'">Table <xsl:value-of select="$section_"/></xsl:when>
+							<xsl:otherwise><xsl:value-of select="$section_"/></xsl:otherwise>
+						</xsl:choose>
+					</xsl:otherwise>
+				</xsl:choose>				
 			</xsl:variable>
 			
 			<element source_id="{$source_id}" id="{$id}" section="{$section}" parent="{$name}"/>
@@ -342,14 +348,15 @@
 			</ics>
 			<permissions>
 				<!-- <copyright-statement>All rights reserved</copyright-statement> -->
-				<xsl:apply-templates select="/*[local-name() = 'iso-standard']/*[local-name() = 'boilerplate']/*[local-name() = 'copyright-statement']"/>
+				<xsl:apply-templates select="/*/*[local-name() = 'boilerplate']/*[local-name() = 'copyright-statement']"/>
 				<copyright-year>
 					<xsl:apply-templates select="*[local-name() = 'copyright']/*[local-name() = 'from']" mode="front"/>
 				</copyright-year>
 				<copyright-holder>
 					<xsl:apply-templates select="*[local-name() = 'copyright']/*[local-name() = 'owner']/*[local-name() = 'organization']/*[local-name() = 'abbreviation']" mode="front"/>
 				</copyright-holder>
-				<xsl:apply-templates select="/*[local-name() = 'iso-standard']/*[local-name() = 'boilerplate']/*[local-name() = 'license-statement']"/>
+				<xsl:apply-templates select="/*/*[local-name() = 'boilerplate']/*[local-name() = 'legal-statement']"/>
+				<xsl:apply-templates select="/*/*[local-name() = 'boilerplate']/*[local-name() = 'license-statement']"/>
 			</permissions>
 			
 			<!-- check non-processed elements in bibdata -->
@@ -490,6 +497,26 @@
 	</xsl:template>	
 	<xsl:template match="*[local-name() = 'boilerplate']/*[local-name() = 'copyright-statement']//*[local-name() = 'p']//*[local-name() = 'br']"  priority="1">
 		<xsl:value-of select="'&#x2028;'"/><!-- linebreak -->
+	</xsl:template>	
+		
+	<xsl:template match="*[local-name() = 'boilerplate']/*[local-name() = 'legal-statement']">
+		<license specific-use="legal">
+			<xsl:for-each select="*[local-name() = 'clause'][1]/*[local-name() = 'title']">
+				<xsl:attribute name="xlink:title">
+					<xsl:value-of select="."/>
+				</xsl:attribute>
+			</xsl:for-each>
+			<xsl:apply-templates/>
+		</license>	
+	</xsl:template>
+	<xsl:template match="*[local-name() = 'boilerplate']/*[local-name() = 'legal-statement']/*[local-name() = 'clause']/*[local-name() = 'title']" priority="1"/>
+	<xsl:template match="*[local-name() = 'boilerplate']/*[local-name() = 'legal-statement']/*[local-name() = 'clause']" priority="1">
+		<license-p>
+			<xsl:attribute name="id">
+				<xsl:call-template name="getId"/>
+			</xsl:attribute>
+			<xsl:apply-templates/>
+		</license-p>
 	</xsl:template>	
 	
 	<xsl:template match="*[local-name() = 'boilerplate']/*[local-name() = 'license-statement']">
@@ -822,7 +849,12 @@
 			<xsl:attribute name="list-type">
 				<xsl:choose>
 					<xsl:when test="@type = 'arabic'">alpha-lower</xsl:when>
-					<xsl:otherwise><xsl:value-of select="@type"/></xsl:otherwise>
+					<xsl:otherwise>
+						<xsl:choose>
+							<xsl:when test="normalize-space(@type) = ''">alpha-lower</xsl:when>
+							<xsl:otherwise><xsl:value-of select="@type"/></xsl:otherwise>
+						</xsl:choose>
+					</xsl:otherwise>
 				</xsl:choose>
 			</xsl:attribute>
 			<xsl:apply-templates />
