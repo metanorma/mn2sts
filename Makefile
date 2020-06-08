@@ -38,8 +38,8 @@ documents/%.mn.xml: src/test/resources/%.mn.xml
 target/$(JAR_FILE):
 	mvn --settings settings.xml -DskipTests clean package shade:shade
 
-test: target/$(JAR_FILE)
-	mvn --settings settings.xml test surefire-report:report
+test: documents/%.mn.xml target/$(JAR_FILE)
+	mvn -DinputXML=$< --settings settings.xml test surefire-report:report
 
 deploy:
 	mvn --settings settings.xml -Dmaven.test.skip=true clean deploy shade:shade
