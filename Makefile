@@ -38,7 +38,7 @@ documents/%.mn.xml: src/test/resources/%.mn.xml
 target/$(JAR_FILE):
 	mvn --settings settings.xml -DskipTests clean package shade:shade
 
-test: documents/%.mn.xml target/$(JAR_FILE)
+test: tests/mn-samples-iso/documents/international-standard/rice-en.cd.xml target/$(JAR_FILE)
 	mvn -DinputXML=$< --settings settings.xml test surefire-report:report
 
 deploy:
