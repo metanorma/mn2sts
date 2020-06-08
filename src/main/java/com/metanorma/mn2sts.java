@@ -145,7 +145,7 @@ public class mn2sts {
      * @throws IOException In case of an I/O problem
      * @throws javax.xml.transform.TransformerException
      */
-    private void convertmn2sts(File xmlin, File xsl, File xmlout, CheckAgainstEnum checkAgainst) throws IOException, TransformerException {
+    private void convertmn2sts(File xmlin, File xsl, File xmlout, CheckAgainstEnum checkAgainst) throws IOException, TransformerException, SAXParseException {
         
         try {
             OutputJaxpImplementationInfo();
@@ -175,9 +175,8 @@ public class mn2sts {
             // check agains XSD NISO, DTD NISO or DTD ISO
             checkSTS(xmlout, checkAgainst);
                 
-        } catch (SAXParseException e) {
-            System.err.println(e.toString());
-            System.exit(ERROR_EXIT_CODE);   
+        } catch (SAXParseException e) {            
+            throw (e);
         } catch (Exception e) {
             e.printStackTrace(System.err);
             System.exit(ERROR_EXIT_CODE);
@@ -348,6 +347,9 @@ public class mn2sts {
 
                     app.convertmn2sts(fXMLin, fXSL, fXMLout, checkAgainst);
                     System.out.println("End!");
+                } catch (SAXParseException e) {
+                    System.err.println(e.toString());
+                    System.exit(ERROR_EXIT_CODE);
                 } catch (Exception e) {
                     e.printStackTrace(System.err);
                     System.exit(ERROR_EXIT_CODE);
