@@ -86,7 +86,11 @@ clean:
 
 publish: published
 published: documents.html
-	mkdir published
+	mkdir $@
+ifeq ($(OS),Windows_NT)
+	xcopy documents $@\ /E
+else
 	cp -a documents $@
+endif
 
 .PHONY: all clean test deploy version publish
