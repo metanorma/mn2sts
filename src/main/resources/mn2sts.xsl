@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:mml="http://www.w3.org/1998/Math/MathML" xmlns:tbx="urn:iso:std:iso:30042:ed-1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xalan="http://xml.apache.org/xalan" exclude-result-prefixes="xalan" version="1.0">
+<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" 
+			xmlns:mml="http://www.w3.org/1998/Math/MathML" 
+			xmlns:tbx="urn:iso:std:iso:30042:ed-1" 
+			xmlns:xlink="http://www.w3.org/1999/xlink" 
+			xmlns:xalan="http://xml.apache.org/xalan" 
+			xmlns:java="http://xml.apache.org/xalan/java" 
+			exclude-result-prefixes="xalan java" 
+			version="1.0">
 
 	<xsl:output version="1.0" method="xml" encoding="UTF-8" indent="yes"/>
 	
@@ -788,6 +795,15 @@
 	<xsl:template match="*[local-name() = 'localityStack']">
 		<xsl:text>, </xsl:text>
 		<xsl:for-each select="*[local-name() = 'locality']">
+			<xsl:variable name="type">
+				<xsl:call-template name="capitalize">
+					<xsl:with-param name="str" select="@type"/>
+				</xsl:call-template>
+			</xsl:variable>
+			<xsl:if test="$type != ''">
+				<xsl:value-of select="$type"/>
+				<xsl:text> </xsl:text>
+			</xsl:if>
 			<xsl:value-of select="*[local-name() = 'referenceFrom']"/>
 			<xsl:if test="position() != last()">; </xsl:if>
 		</xsl:for-each>
@@ -919,7 +935,7 @@
 	
 	<xsl:template match="*[local-name() = 'eref']">
 		<std>
-			<std-ref><xsl:value-of select="@citeas"/></std-ref>
+			<std-ref><xsl:value-of select="java:replaceAll(java:java.lang.String.new(@citeas),'--','—')"/></std-ref>
 			<xsl:apply-templates select="*[local-name() = 'localityStack']"/>
 		</std>
 	</xsl:template>
@@ -1031,7 +1047,7 @@
 	
 	<xsl:template match="*[local-name() = 'localityStack']" mode="disp-quote">		
 		<xsl:for-each select="*[local-name()='locality']">
-			<xsl:if test="position() =1"><xsl:text>, </xsl:text></xsl:if>
+			<xsl:if test="position() = 1"><xsl:text>, </xsl:text></xsl:if>
 			<xsl:apply-templates select="." mode="disp-quote"/>
 			<xsl:if test="position() != last()"><xsl:text>; </xsl:text></xsl:if>
 		</xsl:for-each>	
@@ -1392,5 +1408,12 @@
 		</xsl:variable>
 		<xsl:value-of select="$section"/>
 	</xsl:template>
+	
+	<xsl:template name="capitalize">
+		<xsl:param name="str" />
+		<xsl:value-of select="java:toUpperCase(java:java.lang.String.new(substring($str, 1, 1)))"/>
+		<xsl:value-of select="substring($str, 2)"/>		
+	</xsl:template>
+
 	
 </xsl:stylesheet>
