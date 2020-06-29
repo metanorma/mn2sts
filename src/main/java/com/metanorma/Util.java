@@ -1,6 +1,5 @@
 package com.metanorma;
 
-import static com.metanorma.mn2sts.DEBUG;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
