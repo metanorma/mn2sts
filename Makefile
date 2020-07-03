@@ -16,7 +16,7 @@ DESTSTSHTML := $(patsubst %.xml,%.html,$(DESTSTSXML))
 SAXON_URL := https://repo1.maven.org/maven2/net/sf/saxon/Saxon-HE/10.1/Saxon-HE-10.1.jar
 STS2HTMLXSL := https://www.iso.org/schema/isosts/resources/isosts2html_standalone.xsl
 
-all: documents.html
+all: target/$(JAR_FILE) documents documents.html
 
 src/test/resources/iso-tc154-8601-1-en.mn.xml: tests/iso-8601-1/documents/iso-tc154-8601-1-en.xml
 	cp $< $@
@@ -53,14 +53,14 @@ deploy:
 documents/%.sts.html: documents/%.sts.xml saxon.jar
 	java -jar saxon.jar -s:$< -xsl:$(STS2HTMLXSL) -o:$@
 
-documents/%.sts.xml: documents/%.mn.xml target/$(JAR_FILE) | documents
+documents/%.sts.xml: documents/%.mn.xml | target/$(JAR_FILE) documents
 	java -jar target/$(JAR_FILE) --xml-file-in $< --xml-file-out $@
 
-mn2stsDTD_NISO: documents/%.sts.xml target/$(JAR_FILE) | documents
-	java -jar target/$(JAR_FILE) --xml-file-in $< --check-type dtd-niso
+mn2stsDTD_NISO: $(DESTSTSXML) | target/$(JAR_FILE) documents
+	@$(foreach xml,$(DESTSTSXML),java -jar target/$(JAR_FILE) --xml-file-in $(xml) --check-type dtd-niso;)
 
-mn2stsDTD_ISO: documents/%.sts.xml target/$(JAR_FILE) | documents
-	java -jar target/$(JAR_FILE) --xml-file-in $< --check-type dtd-niso
+mn2stsDTD_ISO: $(DESTSTSXML) | target/$(JAR_FILE) documents
+	@$(foreach xml,$(DESTSTSXML),java -jar target/$(JAR_FILE) --xml-file-in $(xml) --check-type dtd-iso;)
 
 saxon.jar:
 	curl -sSL $(SAXON_URL) -o $@
@@ -93,4 +93,4 @@ else
 	cp -a documents $@
 endif
 
-.PHONY: all clean test deploy version publish
+.PHONY: all clean test deploy version publish mn2stsDTD_NISO mn2stsDTD_ISO
