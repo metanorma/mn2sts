@@ -5,6 +5,10 @@ on:
     branches:
       - master
   pull_request:
+    paths-ignore:
+      - .github/workflows/release.yml
+      - .github/workflows/ubuntu.yml
+      - .github/workflows/windows.yml
 
 jobs:
   build:
@@ -24,7 +28,11 @@ jobs:
       - name: Setup prerequisites
         run: |
           # Install Maven
-          brew install maven
+          brew install maven yq
+
+      - name: Install yq
+        run: |
+          brew install yq
 
       - name: Run tests
         run: |

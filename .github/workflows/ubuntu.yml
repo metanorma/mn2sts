@@ -5,7 +5,10 @@ on:
     branches:
       - master
   pull_request:
-
+    paths-ignore:
+      - .github/workflows/release.yml
+      - .github/workflows/macos.yml
+      - .github/workflows/windows.yml
 jobs:
   build:
     runs-on: ubuntu-latest

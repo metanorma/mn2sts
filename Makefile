@@ -2,7 +2,6 @@
 SHELL ?= /bin/bash
 
 JAR_VERSION := $(shell mvn -q -Dexec.executable="echo" -Dexec.args='$${project.version}' --non-recursive exec:exec -DforceStdout)
-#JAR_VERSION := 1.0
 JAR_FILE := mn2sts-$(JAR_VERSION).jar
 
 SRCDIR := src/test/resources
@@ -17,20 +16,33 @@ DESTSTSHTML := $(patsubst %.xml,%.html,$(DESTSTSXML))
 SAXON_URL := https://repo1.maven.org/maven2/net/sf/saxon/Saxon-HE/10.1/Saxon-HE-10.1.jar
 STS2HTMLXSL := https://www.iso.org/schema/isosts/resources/isosts2html_standalone.xsl
 
-all: documents.html
+ifeq ($(OS),Windows_NT)
+  CMD_AND = &
+else
+  CMD_AND = ;
+endif
+
+all: target/$(JAR_FILE) documents documents.html
 
 src/test/resources/iso-tc154-8601-1-en.mn.xml: tests/iso-8601-1/documents/iso-tc154-8601-1-en.xml
 	cp $< $@
 
 tests/iso-8601-1/documents/iso-tc154-8601-1-en.xml:
-	cd tests/iso-8601-1; \
-	$(MAKE) all; \
-	cd ../..
+ifeq ($(OS),Windows_NT)
+	$(MAKE) -C tests/iso-8601-1 -f Makefile.win all SHELL=cmd
+else
+	$(MAKE) -C tests/iso-8601-1 all
+endif
 
 src/test/resources/iso-rice-en.cd.mn.xml: tests/mn-samples-iso/documents/international-standard/rice-en.cd.xml
 	cp $< $@
 
 tests/mn-samples-iso/documents/international-standard/rice-en.cd.xml:
+ifeq ($(OS),Windows_NT)
+	$(MAKE) -C tests/mn-samples-iso -f Makefile.win all SHELL=cmd
+else
+	$(MAKE) -C tests/mn-samples-iso all
+endif
 
 documents/%.mn.xml: src/test/resources/%.mn.xml
 	cp $< $@
@@ -47,18 +59,14 @@ deploy:
 documents/%.sts.html: documents/%.sts.xml saxon.jar
 	java -jar saxon.jar -s:$< -xsl:$(STS2HTMLXSL) -o:$@
 
-documents/%.sts.xml: documents/%.mn.xml target/$(JAR_FILE) | documents
+documents/%.sts.xml: documents/%.mn.xml | target/$(JAR_FILE) documents
 	java -jar target/$(JAR_FILE) --xml-file-in $< --xml-file-out $@
 
-mn2stsDTD_NISO: target/$(JAR_FILE) $(DESTSTSXML) | documents
-	for file in $(filter-out $<,$^); do \
-	java -jar $< --xml-file-in $${file} --check-type dtd-niso; \
-	done
+mn2stsDTD_NISO: $(DESTSTSXML) target/$(JAR_FILE) | documents
+	@$(foreach xml,$(DESTSTSXML),java -jar target/$(JAR_FILE) --xml-file-in $(xml) --check-type dtd-niso $(CMD_AND))
 
-mn2stsDTD_ISO: target/$(JAR_FILE) $(DESTSTSXML) | documents
-	for file in $(filter-out $<,$^); do \
-	java -jar $< --xml-file-in $${file} --check-type dtd-iso; \
-	done
+mn2stsDTD_ISO: $(DESTSTSXML) target/$(JAR_FILE) | documents
+	@$(foreach xml,$(DESTSTSXML),java -jar target/$(JAR_FILE) --xml-file-in $(xml) --check-type dtd-iso $(CMD_AND))
 
 saxon.jar:
 	curl -sSL $(SAXON_URL) -o $@
@@ -76,15 +84,19 @@ documents.html: documents.rxl
 	bundle exec relaton xml2html documents.rxl
 
 documents:
-	mkdir -p $@
+	mkdir $@
 
 clean:
-	mvn clean; \
+	mvn clean
 	rm -rf documents
 
 publish: published
 published: documents.html
-	mkdir published && \
-	cp -a documents $@/
+	mkdir $@
+ifeq ($(OS),Windows_NT)
+	xcopy documents $@\ /E
+else
+	cp -a documents $@
+endif
 
-.PHONY: all clean test deploy version publish
+.PHONY: all clean test deploy version publish mn2stsDTD_NISO mn2stsDTD_ISO
