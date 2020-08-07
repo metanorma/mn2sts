@@ -50,6 +50,8 @@ public class mn2sts {
 
     static CheckAgainstEnum checkAgainst = CheckAgainstEnum.XSD_NISO;
     
+    static OutputFormatEnum outputFormat = OutputFormatEnum.NISO;
+    
     static boolean DEBUG = false;
 
     static String VER = Util.getAppVersion();
@@ -123,9 +125,16 @@ public class mn2sts {
                     .build());
             addOption(Option.builder("t")
                     .longOpt("check-type")
-                    .desc("Check against XSD NISO (value xsd-niso), DTD ISO (dtd-iso), DTD NISO (dtd-niso) (Default: xsd-niso)")
+                    .desc("Check against XSD NISO (value 'xsd-niso'), DTD ISO (value 'dtd-iso'), DTD NISO (value 'dtd-niso') (Default: xsd-niso)")
                     .hasArg()
                     .argName("xsd-niso|dtd-iso|dtd-niso")
+                    .required(false)
+                    .build());
+            addOption(Option.builder("f")
+                    .longOpt("output-format")
+                    .desc("Output format: NISO STS (value 'niso') or ISO STS (value 'iso') (Default: niso)")
+                    .hasArg()
+                    .argName("niso|iso")
                     .required(false)
                     .build());
         }
@@ -135,7 +144,7 @@ public class mn2sts {
 
     static final int ERROR_EXIT_CODE = -1;
 
-   
+
     /**
      * Converts an MN XML file to NISO STS XML file
      *
@@ -145,7 +154,7 @@ public class mn2sts {
      * @throws IOException In case of an I/O problem
      * @throws javax.xml.transform.TransformerException
      */
-    private void convertmn2sts(File xmlin, File xsl, File xmlout, CheckAgainstEnum checkAgainst) throws IOException, TransformerException, SAXParseException {
+    private void convertmn2sts(File xmlin, File xsl, File xmlout) throws IOException, TransformerException, SAXParseException {
         
         try {
             OutputJaxpImplementationInfo();
@@ -160,6 +169,7 @@ public class mn2sts {
             TransformerFactory factory = TransformerFactory.newInstance();
             Transformer transformer = factory.newTransformer(srcXSL);
             transformer.setParameter("debug", DEBUG);
+            transformer.setParameter("outputformat", outputFormat);
  
             Source src = new StreamSource(xmlin);
             StringWriter resultWriter = new StringWriter();
@@ -173,7 +183,7 @@ public class mn2sts {
             }
             
             // check agains XSD NISO, DTD NISO or DTD ISO
-            checkSTS(xmlout, checkAgainst);
+            checkSTS(xmlout);
                 
         } catch (SAXParseException e) {            
             throw (e);
@@ -183,7 +193,7 @@ public class mn2sts {
         }
     }
 
-    private void checkSTS(File xml, CheckAgainstEnum checkAgainst) throws SAXParseException {
+    private void checkSTS(File xml) throws SAXParseException {
             
         List<String> exceptions = new LinkedList<>(); 
 
@@ -273,7 +283,7 @@ public class mn2sts {
                 try {
                     mn2sts app = new mn2sts();
 
-                    app.checkSTS(fXMLin, checkAgainst);
+                    app.checkSTS(fXMLin);
                     
                     System.out.println("End!");
                 
@@ -326,15 +336,27 @@ public class mn2sts {
 
                 if (cmd.hasOption("check-type")) {
                     String ctype = cmd.getOptionValue("check-type");  
-                    ctype = ctype.replace("-", "_").toUpperCase();
-                    if (CheckAgainstEnum.valueOf(ctype) != null) {
+                    ctype = ctype.replace("-", "_").toUpperCase();                    
+                    try {
                         checkAgainst = CheckAgainstEnum.valueOf(ctype);
-                    } else {
+                    } catch (Exception ex) {
                         System.out.println("Unknown option value: " + cmd.getOptionValue("check-type"));
                         System.exit(ERROR_EXIT_CODE);
                     }
                 }
 
+                if (cmd.hasOption("output-format")) {
+                    String outputtype = cmd.getOptionValue("output-format");  
+                    outputtype = outputtype.toUpperCase();                    
+                    try {
+                        outputFormat = OutputFormatEnum.valueOf(outputtype);
+                    } catch (Exception ex) {
+                        System.out.println("Unknown option value: " + cmd.getOptionValue("output-format"));
+                        System.exit(ERROR_EXIT_CODE);
+                    }
+                }
+                
+                
                 System.out.println(String.format(INPUT_LOG, XML_INPUT, fXMLin));
                 if (fXSL != null) {
                     System.out.println(String.format(INPUT_LOG, XSL_INPUT, fXSL));
@@ -345,7 +367,7 @@ public class mn2sts {
                 try {
                     mn2sts app = new mn2sts();
 
-                    app.convertmn2sts(fXMLin, fXSL, fXMLout, checkAgainst);
+                    app.convertmn2sts(fXMLin, fXSL, fXMLout);
                     System.out.println("End!");
                 } catch (SAXParseException e) {
                     System.err.println(e.toString());
@@ -364,8 +386,6 @@ public class mn2sts {
             System.out.println(USAGE);
             System.exit(ERROR_EXIT_CODE);
         }
-        
-        
     }
 
     private static String getUsage() {

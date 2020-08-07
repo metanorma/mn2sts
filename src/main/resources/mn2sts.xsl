@@ -13,6 +13,8 @@
 	<xsl:key name="klang" match="*[local-name() = 'bibdata']/*[local-name() = 'title']" use="@language"/>
 
 	<xsl:param name="debug">false</xsl:param>
+	<xsl:param name="outputformat">NISO</xsl:param>
+	
 	<xsl:variable name="change_id">true</xsl:variable>
 	
 	<xsl:variable name="lower">abcdefghijklmnopqrstuvwxyz</xsl:variable> 
