@@ -111,6 +111,20 @@ public class mn2stsTests {
         assertTrue(systemOutRule.getLog().contains("is NOT valid"));
     }
     
+    @Test
+    // Element type "code" must be declared. etc...
+    public void successConvertAndCheckDTD_ISO() throws ParseException {        
+        ClassLoader classLoader = getClass().getClassLoader();        
+        //String xml = classLoader.getResource(XMLFILE_MN).getFile();        
+        Path xmlout = Paths.get(System.getProperty("buildDirectory"), "out.xml");
+
+        String[] args = new String[]{"--xml-file-in",  XMLFILE_MN, "--xml-file-out", xmlout.toAbsolutePath().toString(), "--check-type", "dtd-iso", "--output-format", "iso"};
+        mn2sts.main(args);
+
+        assertTrue(Files.exists(xmlout));
+        assertTrue(systemOutRule.getLog().contains("is valid"));
+    }
+    
     /*@Test
     public void successCheckXSD() throws ParseException {
         ClassLoader classLoader = getClass().getClassLoader();        
