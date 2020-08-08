@@ -60,7 +60,7 @@ documents/%.sts.html: documents/%.sts.xml saxon.jar
 	java -jar saxon.jar -s:$< -xsl:$(STS2HTMLXSL) -o:$@
 
 documents/%.sts.xml: documents/%.mn.xml | target/$(JAR_FILE) documents
-	java -jar target/$(JAR_FILE) --xml-file-in $< --xml-file-out $@
+	java -jar target/$(JAR_FILE) --xml-file-in $< --xml-file-out $@ --output-format iso
 
 mn2stsDTD_NISO: $(DESTSTSXML) target/$(JAR_FILE) | documents
 	@$(foreach xml,$(DESTSTSXML),java -jar target/$(JAR_FILE) --xml-file-in $(xml) --check-type dtd-niso $(CMD_AND))

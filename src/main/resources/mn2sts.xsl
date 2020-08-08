@@ -15,6 +15,8 @@
 	<xsl:param name="debug">false</xsl:param>
 	<xsl:param name="outputformat">NISO</xsl:param>
 	
+	<xsl:variable name="format" select="normalize-space($outputformat)"/>
+	
 	<xsl:variable name="change_id">true</xsl:variable>
 	
 	<xsl:variable name="lower">abcdefghijklmnopqrstuvwxyz</xsl:variable> 
@@ -26,23 +28,23 @@
 		<elements>
 			<xsl:apply-templates select="/*/*[local-name() = 'preface']/node()" mode="elements"/>
 			<!-- Scope -->
-			<xsl:apply-templates select="/*/*[local-name() = 'sections']/*[local-name() = 'clause'][@id = '_scope']" mode="elements"> <!-- [1] -->
+			<xsl:apply-templates select="/*/*[local-name() = 'sections']/*[local-name() = 'clause'][@type='scope']" mode="elements"> <!-- [1] -->
 				<xsl:with-param name="sectionNum" select="'1'"/>
 			</xsl:apply-templates>
 			
 			<!-- Normative References -->
-			<xsl:apply-templates select="/*/*[local-name() = 'bibliography']/*[local-name() = 'references'][@id = '_normative_references']" mode="elements"> <!-- [@id = '_normative_references'] -->
-				<xsl:with-param name="sectionNum" select="count(/*/*[local-name() = 'sections']/*[local-name() = 'clause'][@id = '_scope']) + 1"/>
+			<xsl:apply-templates select="/*/*[local-name() = 'bibliography']/*[local-name() = 'references'][@normative='true']" mode="elements"> <!-- [@id = '_normative_references'] -->
+				<xsl:with-param name="sectionNum" select="count(/*/*[local-name() = 'sections']/*[local-name() = 'clause'][@type='scope']) + 1"/>
 			</xsl:apply-templates>
 			
 			<!-- Other main sections: Terms, etc... -->					
-			<xsl:apply-templates select="/*/*[local-name() = 'sections']/*[@id != '_scope']" mode="elements"> <!-- position() &gt; 1  -->
+			<xsl:apply-templates select="/*/*[local-name() = 'sections']/*[not(@type='scope')]" mode="elements"> <!-- position() &gt; 1  -->
 				<xsl:with-param name="sectionNumSkew" select="'1'"/>
 			</xsl:apply-templates>
 			
 			<xsl:apply-templates select="/*/*[local-name() = 'annex']" mode="elements"/>
 			
-			<xsl:apply-templates select="/*/*[local-name() = 'bibliography']/*[local-name() = 'references'][@id != '_normative_references']" mode="elements"/>
+			<xsl:apply-templates select="/*/*[local-name() = 'bibliography']/*[local-name() = 'references'][not(@normative='true')]" mode="elements"/>
 			
 		</elements>
 	</xsl:variable>
@@ -106,7 +108,7 @@
 					<xsl:otherwise>
 						<xsl:choose>							
 							<xsl:when test="$name = 'clause' or 
-																			($name = 'references' and @id = '_normative_references') or 
+																			($name = 'references' and @normative='true') or 
 																			$name = 'annex' or
 																			$name = 'terms' or
 																			$name = 'term' or 
@@ -198,20 +200,20 @@
 			</front>
 			
 			
-			<xsl:if test="*[local-name() = 'sections'] or *[local-name() = 'bibliography']/*[local-name() = 'references'][@id = '_normative_references']">
+			<xsl:if test="*[local-name() = 'sections'] or *[local-name() = 'bibliography']/*[local-name() = 'references'][@normative='true']">
 				<body>					
 					<!-- Scope -->
-					<xsl:apply-templates select="*[local-name() = 'sections']/*[local-name() = 'clause'][@id = '_scope']"> <!-- [1] -->
+					<xsl:apply-templates select="*[local-name() = 'sections']/*[local-name() = 'clause'][@type='scope']"> <!-- [1] -->
 						<xsl:with-param name="sectionNum" select="'1'"/>
 					</xsl:apply-templates>
 					
 					<!-- Normative References -->
-					<xsl:apply-templates select="*[local-name() = 'bibliography']/*[local-name() = 'references'][@id = '_normative_references']"> <!-- [@id = '_normative_references'] -->
-						<xsl:with-param name="sectionNum" select="count(*[local-name() = 'sections']/*[local-name() = 'clause'][@id = '_scope']) + 1"/>
+					<xsl:apply-templates select="*[local-name() = 'bibliography']/*[local-name() = 'references'][@normative='true']"> <!-- [@id = '_normative_references'] -->
+						<xsl:with-param name="sectionNum" select="count(*[local-name() = 'sections']/*[local-name() = 'clause'][@type='scope']) + 1"/>
 					</xsl:apply-templates>
 					
 					<!-- Other main sections: Terms, etc... -->					
-					<xsl:apply-templates select="*[local-name() = 'sections']/*[@id != '_scope']"> <!-- position() &gt; 1  -->
+					<xsl:apply-templates select="*[local-name() = 'sections']/*[not(@type='scope')]"> <!-- position() &gt; 1  -->
 						<xsl:with-param name="sectionNumSkew" select="'1'"/>
 					</xsl:apply-templates>
 					
@@ -225,7 +227,7 @@
 							<xsl:apply-templates select="*[local-name() = 'annex']" mode="back"/>
 						</app-group>
 					</xsl:if>
-					<xsl:apply-templates select="*[local-name() = 'bibliography']/*[local-name() = 'references'][@id != '_normative_references']" mode="back"/>
+					<xsl:apply-templates select="*[local-name() = 'bibliography']/*[local-name() = 'references'][not(@normative='true')]" mode="back"/>
 				</back>
 			</xsl:if>
 			<xsl:if test="$debug = 'true'">
@@ -521,9 +523,11 @@
 	<xsl:template match="*[local-name() = 'boilerplate']/*[local-name() = 'legal-statement']/*[local-name() = 'clause']/*[local-name() = 'title']" priority="1"/>
 	<xsl:template match="*[local-name() = 'boilerplate']/*[local-name() = 'legal-statement']/*[local-name() = 'clause']" priority="1">
 		<license-p>
-			<xsl:attribute name="id">
-				<xsl:call-template name="getId"/>
-			</xsl:attribute>
+			<xsl:if test="$format = 'NISO'">
+				<xsl:attribute name="id">
+					<xsl:call-template name="getId"/>
+				</xsl:attribute>
+			</xsl:if>
 			<xsl:apply-templates/>
 		</license-p>
 	</xsl:template>	
@@ -543,7 +547,12 @@
 		<xsl:apply-templates/>
 	</xsl:template>
 	<xsl:template match="*[local-name() = 'boilerplate']/*[local-name() = 'license-statement']//*[local-name() = 'p']" priority="1">
-		<license-p id="{@id}">
+		<license-p>
+			<xsl:if test="$format = 'NISO'">
+				<xsl:attribute name="id">
+					<xsl:value-of select="@id"/>					
+				</xsl:attribute>
+			</xsl:if>
 			<xsl:apply-templates/>
 		</license-p>
 	</xsl:template>
@@ -583,21 +592,27 @@
 	</xsl:template>
 	
 	
-	<xsl:template match="*[local-name() = 'bibliography']/*[local-name() = 'references'][@id != '_normative_references']" mode="back">
-		<ref-list content-type="bibl" id="sec_bibl">
+	<xsl:template match="*[local-name() = 'bibliography']/*[local-name() = 'references'][not(@normative='true')]" mode="back">
+		<ref-list content-type="bibl">
+			<xsl:attribute name="id">
+				<xsl:text>sec_bibl</xsl:text>
+				<xsl:if test="count(//*[local-name() = 'references'][not(@normative='true')]) &gt; 1">
+					<xsl:number format="_1" count="*[local-name() = 'references'][not(@normative='true')]"/>
+				</xsl:if>
+			</xsl:attribute>
 			<xsl:apply-templates/>
 		</ref-list>
 	</xsl:template>
 	
 	
-	<xsl:template match="*[local-name() = 'bibitem'][1][ancestor::*[local-name() = 'references'][@id = '_normative_references']]" priority="2">
+	<xsl:template match="*[local-name() = 'bibitem'][1][ancestor::*[local-name() = 'references'][@normative='true']]" priority="2">
 		<ref-list content-type="norm-refs">
 			<xsl:for-each select="../*[local-name() = 'bibitem']">
 				<xsl:call-template name="bibitem"/>
 			</xsl:for-each>
 		</ref-list>
 	</xsl:template>
-	<xsl:template match="*[local-name() = 'bibitem'][position() &gt; 1][ancestor::*[local-name() = 'references'][@id = '_normative_references']]" priority="2"/>
+	<xsl:template match="*[local-name() = 'bibitem'][position() &gt; 1][ancestor::*[local-name() = 'references'][@normative='true']]" priority="2"/>
 	
 	<xsl:template match="*[local-name() = 'bibitem']" name="bibitem">
 		<xsl:variable name="current_id">
@@ -611,7 +626,11 @@
 					<xsl:value-of select="@type"/>
 				</xsl:attribute>
 			</xsl:if>
-			<xsl:attribute name="id"><xsl:value-of select="$id"/></xsl:attribute>
+			<xsl:attribute name="id"><xsl:value-of select="$id"/>
+				<xsl:if test="count(//*[local-name() = 'references'][not(@normative='true')]) &gt; 1">
+					<xsl:number format="_1" count="*[local-name() = 'references'][not(@normative='true')]"/>
+				</xsl:if>
+			</xsl:attribute>
 			<label><xsl:number format="[1]"/></label>
 			<std>
 				<std-ref><xsl:value-of select="*[local-name() = 'docidentifier']"/></std-ref>
@@ -677,7 +696,7 @@
 	
 	
 	<xsl:template match="*[local-name() = 'clause'] | 
-																*[local-name() = 'references'][@id = '_normative_references'] | 
+																*[local-name() = 'references'][@normative='true'] | 
 																*[local-name() = 'terms'] |
 																*[local-name() = 'definitions']">
 		<xsl:param name="sectionNum"/>
@@ -697,8 +716,8 @@
 	
 		<xsl:variable name="sec_type">
 			<xsl:choose>
-				<xsl:when test="@id = '_scope'">scope</xsl:when>
-				<xsl:when test="@id = '_normative_references'">norm-refs</xsl:when>
+				<xsl:when test="@type='scope'">scope</xsl:when>
+				<xsl:when test="@normative='true'">norm-refs</xsl:when>
 				<xsl:when test="@id = 'tda' or @id = 'terms'">terms</xsl:when>
 				<xsl:otherwise><!-- <xsl:value-of select="@id"/> --></xsl:otherwise>
 			</xsl:choose>
@@ -1073,8 +1092,18 @@
 	</xsl:template>
 	
 	<xsl:template match="*[local-name() = 'annotation']">
-		<element-citation>
-			<annotation id="{@id}">
+		<element-citation>			
+			<xsl:if test="$format = 'ISO'">
+				<xsl:attribute name="id">
+					<xsl:value-of select="@id"/>					
+				</xsl:attribute>				
+			</xsl:if>			
+			<annotation>
+				<xsl:if test="$format = 'NISO'">
+					<xsl:attribute name="id">
+						<xsl:value-of select="@id"/>					
+					</xsl:attribute>
+				</xsl:if>
 				<xsl:apply-templates/>
 			</annotation>
 		</element-citation>
@@ -1149,8 +1178,15 @@
 				</tbody>
 			</table>
 		</array>
+		<!-- move notes outside table -->
+		<xsl:for-each select="*[local-name() = 'note']">
+			<xsl:call-template name="note"/>
+		</xsl:for-each>
 		</p>
 	</xsl:template>
+	
+	<xsl:template match="*[local-name() = 'dl']/*[local-name() = 'note']" priority="2"/>
+	
 	
 	<xsl:template match="*[local-name() = 'dt']">
 		<tr>
@@ -1277,10 +1313,25 @@
 	<xsl:template match="*[local-name() = 'review']"/>
 
 	<xsl:template match="*[local-name() = 'sourcecode']">
-		<code>
-			<xsl:apply-templates select="@*"/>
-			<xsl:apply-templates/>
-		</code>
+		<xsl:choose>
+			<xsl:when test="$format = 'NISO'">
+				<code>
+					<xsl:apply-templates select="@*"/>
+					<xsl:apply-templates/>
+				</code>
+			</xsl:when>
+			<!-- ISO -->
+			<xsl:otherwise>
+				<preformat>
+					<xsl:if test="@lang">
+						<xsl:attribute name="preformat-type">
+							<xsl:value-of select="@lang"/>
+						</xsl:attribute>
+					</xsl:if>
+					<xsl:apply-templates/>
+				</preformat>
+			</xsl:otherwise>
+		</xsl:choose>
 	</xsl:template>
 		
 	<xsl:template match="*[local-name() = 'sourcecode']/@lang">
@@ -1319,7 +1370,7 @@
 		<xsl:variable name="section">
 			<xsl:choose>
 				<xsl:when test="local-name() = 'dl'"><xsl:number format="a" level="any"/></xsl:when>
-				<xsl:when test="local-name() = 'bibitem' and ancestor::*[local-name() = 'references'][@id='_normative_references']">norm_ref_<xsl:number/></xsl:when>
+				<xsl:when test="local-name() = 'bibitem' and ancestor::*[local-name() = 'references'][@normative='true']">norm_ref_<xsl:number/></xsl:when>
 				<xsl:when test="local-name() = 'bibitem'">ref_<xsl:number/></xsl:when>
 				<xsl:when test="ancestor::*[local-name() = 'bibliography']">
 					<xsl:value-of select="$sectionNum"/>

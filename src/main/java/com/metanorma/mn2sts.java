@@ -46,7 +46,7 @@ public class mn2sts {
     static final String XML_OUTPUT = "XML";
     static final String XSL_INPUT = "XSL";
     static final String INPUT_LOG = "Input: %s (%s)";
-    static final String OUTPUT_LOG = "Output: %s (%s)";
+    static final String OUTPUT_LOG = "Output: %s (%s), format %s STS";
 
     static CheckAgainstEnum checkAgainst = CheckAgainstEnum.XSD_NISO;
     
@@ -361,7 +361,7 @@ public class mn2sts {
                 if (fXSL != null) {
                     System.out.println(String.format(INPUT_LOG, XSL_INPUT, fXSL));
                 }
-                System.out.println(String.format(OUTPUT_LOG, XML_OUTPUT, fXMLout));
+                System.out.println(String.format(OUTPUT_LOG, XML_OUTPUT, fXMLout, outputFormat));
                 System.out.println();
 
                 try {
