@@ -94,3 +94,11 @@ jobs:
           asset_path: ./target/mn2sts-${{ steps.get_version.outputs.VERSION }}.jar
           asset_name: mn2sts-${{ steps.get_version.outputs.VERSION }}.jar
           asset_content_type: application/java-archive
+
+      - name: Notify mn2sts-ruby
+        uses: peter-evans/repository-dispatch@v1
+        with:
+          token: ${{ secrets.METANORMA_CI_PAT_TOKEN }}
+          repository: metanorma/mn2sts-ruby
+          event-type: metanorma/mn2sts
+          client-payload: '{ "ref": "${{ github.ref }}" }'
