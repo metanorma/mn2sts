@@ -44,6 +44,8 @@
 			
 			<xsl:apply-templates select="/*/*[local-name() = 'annex']" mode="elements"/>
 			
+			<xsl:apply-templates select="//*[local-name() = 'appendix']" mode="elements"/>
+			
 			<xsl:apply-templates select="/*/*[local-name() = 'bibliography']/*[local-name() = 'references'][not(@normative='true')]" mode="elements"/>
 			
 		</elements>
@@ -70,6 +72,7 @@
 		<xsl:variable name="name" select="local-name()"/>
 
 		<xsl:if test="$name = 'annex' or
+								$name = 'appendix' or
 								$name = 'bibitem' or
 								$name = 'clause' or
 								$name = 'references' or
@@ -131,6 +134,10 @@
 			
 			<xsl:variable name="section">
 				<xsl:choose>
+					<xsl:when test="normalize-space(*[local-name() = 'title']/*[local-name() = 'tab'][1]/preceding-sibling::node()) != ''">
+						<!-- presentation xml data -->
+						<xsl:value-of select="*[local-name() = 'title']/*[local-name() = 'tab'][1]/preceding-sibling::node()"/>
+					</xsl:when>
 					<xsl:when test="$section_ = '0'"></xsl:when>
 					<xsl:otherwise>
 						<xsl:choose>
@@ -643,7 +650,7 @@
 		
 	</xsl:template>
 	
-	<xsl:template match="*[local-name() = 'bibitem']/*[local-name() = 'title']">
+	<xsl:template match="*[local-name() = 'bibitem']/*[local-name() = 'title']" priority="2">
 		<xsl:text>, </xsl:text>
 		<title><xsl:apply-templates/></title>
 	</xsl:template>
@@ -1087,6 +1094,11 @@
 	<!-- https://github.com/metanorma/mn2sts/issues/10 -->
 	<xsl:template match="*[local-name() = 'appendix']">
 		<sec id="{@id}" sec-type="appendix">
+			<xsl:variable name="current_id" select="@id"/>
+			<xsl:variable name="section" select="xalan:nodeset($elements)//element[@source_id = $current_id]/@section"/>
+			<xsl:if test="$section != ''">
+				<label><xsl:value-of select="$section"/></label>
+			</xsl:if>
 			<xsl:apply-templates/>
 		</sec>
 	</xsl:template>
@@ -1339,6 +1351,22 @@
 			<xsl:value-of select="."/>
 		</xsl:attribute>
 	</xsl:template>
+	
+	<xsl:template match="*[local-name() = 'title']">
+		<title>
+			<xsl:choose>
+				<xsl:when test="*[local-name() = 'tab']">
+					<xsl:apply-templates select="*[local-name() = 'tab'][1]/following-sibling::node()"/>
+				</xsl:when>
+				<xsl:otherwise>
+					<xsl:apply-templates />
+				</xsl:otherwise>
+			</xsl:choose>
+		</title>
+	</xsl:template>
+	
+	<xsl:template match="*[local-name() = 'title']/@depth"/>
+	<xsl:template match="*[local-name() = 'tab']"/>
 	
 	<xsl:template name="getLevel">
 		<xsl:variable name="level_total" select="count(ancestor::*)"/>
