@@ -640,6 +640,9 @@
 			</xsl:attribute>
 			<label><xsl:number format="[1]"/></label>
 			<std>
+				<xsl:if test="*[local-name() = 'docidentifier'][@type = 'URN']">
+					<xsl:attribute name="std-id"><xsl:value-of select="*[local-name() = 'docidentifier'][@type = 'URN']"/></xsl:attribute>
+				</xsl:if>
 				<std-ref><xsl:value-of select="*[local-name() = 'docidentifier']"/></std-ref>
 				<xsl:apply-templates select="*[local-name() = 'note']"/>				
 				<xsl:apply-templates select="*[local-name() = 'title'][(@type = 'main' and @language = 'en') or not(@type and @language)]"/>				
@@ -963,6 +966,14 @@
 	
 	<xsl:template match="*[local-name() = 'eref']">
 		<std>
+			<xsl:variable name="reference" select="@bibitemid"/>
+			<xsl:variable name="docidentifier_URN" select="//*[local-name() = 'bibitem'][@id = $reference]/*[local-name() = 'docidentifier'][@type = 'URN']"/>
+			<xsl:if test="$docidentifier_URN != ''">
+				<xsl:attribute name="std-id">
+					<xsl:value-of select="$docidentifier_URN"/>
+				</xsl:attribute>
+			</xsl:if>
+			
 			<std-ref><xsl:value-of select="java:replaceAll(java:java.lang.String.new(@citeas),'--','—')"/></std-ref>
 			<xsl:apply-templates select="*[local-name() = 'localityStack']"/>
 		</std>
