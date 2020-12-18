@@ -1179,6 +1179,7 @@
 			<label><xsl:value-of select="$section"/></label>				
 			<xsl:apply-templates select="*[local-name() = 'name']" mode="table"/>				
 			<table width="100%">
+				<xsl:apply-templates select="*[local-name() = 'colgroup']" mode="table"/>
 				<xsl:apply-templates select="*[local-name() = 'thead']" mode="table"/>
 				<xsl:apply-templates select="*[local-name() = 'tfoot']" mode="table"/>
 				<xsl:apply-templates select="*[local-name() = 'tbody']" mode="table"/>
@@ -1204,8 +1205,8 @@
 		</caption>
 	</xsl:template>
 	
-	<xsl:template match="*[local-name() = 'thead'] | *[local-name() = 'tfoot'] | *[local-name() = 'tbody']"/>
-	<xsl:template match="*[local-name() = 'thead'] | *[local-name() = 'tfoot'] | *[local-name() = 'tbody']" mode="table">
+	<xsl:template match="*[local-name() = 'colgroup'] | *[local-name() = 'thead'] | *[local-name() = 'tfoot'] | *[local-name() = 'tbody']"/>
+	<xsl:template match="*[local-name() = 'colgroup'] | *[local-name() = 'thead'] | *[local-name() = 'tfoot'] | *[local-name() = 'tbody']" mode="table">
 		<xsl:element name="{local-name()}">
 			<xsl:copy-of select="@*"/>
 			<xsl:apply-templates />
