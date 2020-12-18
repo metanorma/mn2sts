@@ -34,7 +34,8 @@ jobs:
       - name: Install yq
         run: |
           sudo snap install yq
-          echo "::add-path::/snap/bin"
+          # echo "::add-path::/snap/bin"
+          echo "/snap/bin" >> $GITHUB_PATH
 
 #      - uses: actions/checkout@master
 
