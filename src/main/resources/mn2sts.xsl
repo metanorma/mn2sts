@@ -898,7 +898,7 @@
 		</tbx:tig>
 	</xsl:template>
 	
-	<xsl:template match="*[local-name() = 'p']">
+	<xsl:template match="*[local-name() = 'p']" name="p">
 		<xsl:choose>
 			<xsl:when test="parent::*[local-name() = 'termexample'] or 
 														parent::*[local-name() = 'definition']  or 
@@ -1420,19 +1420,45 @@
 	</xsl:template>
 	
 	<xsl:template match="*[local-name() = 'amend']/*[local-name() = 'description']">
-		
-		<editing-instruction>
-			<xsl:if test="parent::*[local-name() = 'amend']/@id">
-				<xsl:attribute name="id"><xsl:value-of select="parent::*[local-name() = 'amend']/@id"/></xsl:attribute>
-			</xsl:if>
-			<xsl:if test="../@change">
-				<xsl:attribute name="content-type">
-					<xsl:value-of select="../@change"/>
-				</xsl:attribute>
-			</xsl:if>
-			<xsl:apply-templates />
-		</editing-instruction>
+		<xsl:choose>
+			<xsl:when test="$format = 'NISO'">
+				<editing-instruction>
+					<xsl:if test="parent::*[local-name() = 'amend']/@id">
+						<xsl:attribute name="id"><xsl:value-of select="parent::*[local-name() = 'amend']/@id"/></xsl:attribute>
+					</xsl:if>
+					<xsl:if test="../@change">
+						<xsl:attribute name="content-type">
+							<xsl:value-of select="../@change"/>
+						</xsl:attribute>
+					</xsl:if>
+					<xsl:apply-templates />
+				</editing-instruction>	
+			</xsl:when>
+			<!-- ISO -->
+			<xsl:otherwise>
+				<xsl:apply-templates />
+			</xsl:otherwise>
+		</xsl:choose>
 	</xsl:template>
+	
+	<xsl:template match="*[local-name() = 'amend']/*[local-name() = 'description']/*[local-name() = 'p']">
+		<xsl:choose>
+			<xsl:when test="$format = 'NISO'">
+				<xsl:call-template name="p"/>
+			</xsl:when>
+			<xsl:otherwise>
+				<p id="{@id}">
+					<xsl:if test="ancestor::*[local-name() = 'amend']/@change">
+						<xsl:attribute name="content-type">
+							<xsl:value-of select="ancestor::*[local-name() = 'amend']/@change"/>
+						</xsl:attribute>
+					</xsl:if>
+					<xsl:apply-templates />
+				</p>
+			</xsl:otherwise>
+		</xsl:choose>
+	</xsl:template>
+	
 	
 	<xsl:template match="*[local-name() = 'amend']/*[local-name() = 'newcontent']">
 		<xsl:apply-templates />
