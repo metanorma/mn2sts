@@ -265,24 +265,37 @@
 					</xsl:variable>
 					<main><xsl:copy-of select="$title-main"/></main>
 					
+					<xsl:variable name="title-amd">
+						<xsl:apply-templates select="/*/*[local-name() = 'bibdata']/*[local-name() = 'title'][@language = current()/@language and @type = 'title-amd']" mode="front"/>
+					</xsl:variable>
+					
 					<xsl:variable name="title-part">
 						<xsl:apply-templates select="/*/*[local-name() = 'bibdata']/*[local-name() = 'title'][@language = current()/@language and @type = 'title-part']" mode="front"/>
 					</xsl:variable>
-					<compl><xsl:copy-of select="$title-part"/></compl>
+					<compl>
+						<xsl:copy-of select="$title-part"/>
+						<xsl:if test="normalize-space($title-amd) != ''">
+							<xsl:if test="normalize-space($title-part) != ''">
+								<xsl:text> — </xsl:text>
+							</xsl:if>
+							<xsl:copy-of select="$title-amd"/>
+						</xsl:if>
+					</compl>
 					
 					<xsl:variable name="part">
 						<xsl:apply-templates select="/*/*[local-name() = 'bibdata']/*[local-name() = 'ext']/*[local-name() = 'structuredidentifier']/*[local-name() = 'project-number']/@part" mode="front"/>
 					</xsl:variable>
 					
+
 					<xsl:variable name="full-title">
 						<xsl:if test="normalize-space($title-intro) != ''">
 							<xsl:copy-of select="$title-intro"/>
 							<xsl:text> — </xsl:text>
 						</xsl:if>
 						<xsl:copy-of select="$title-main"/>
-						<xsl:if test="normalize-space($title-part) != ''">							
+						<xsl:if test="normalize-space($title-part) != ''">
 							<xsl:if test="$part != ''">
-								<xsl:text> — </xsl:text>															
+								<xsl:text> — </xsl:text>
 									<xsl:choose>
 										<xsl:when test="current()/@language = 'en'"><xsl:text>Part </xsl:text></xsl:when>
 										<xsl:when test="current()/@language = 'fr'"><xsl:text>Partie </xsl:text></xsl:when>
@@ -291,6 +304,10 @@
 									<xsl:text>: </xsl:text>															
 							</xsl:if>
 							<xsl:copy-of select="$title-part"/>
+						</xsl:if>
+						<xsl:if test="normalize-space($title-amd) != ''">
+							<xsl:text> — </xsl:text>
+							<xsl:copy-of select="$title-amd"/>
 						</xsl:if>
 					</xsl:variable>
 					<full><xsl:copy-of select="$full-title"/></full>
@@ -346,7 +363,15 @@
 				<xsl:apply-templates select="*[local-name() = 'docidentifier'][@type='iso-with-lang']" mode="front"/>
 			</doc-ref>
 			<release-date>
-				<xsl:apply-templates select="*[local-name() = 'date'][@type='published']/*[local-name() = 'on']" mode="front"/>
+				<xsl:choose>
+					<xsl:when test="*[local-name() = 'date'][@type='published']/*[local-name() = 'on']">
+						<xsl:attribute name="date-type">published</xsl:attribute>
+						<xsl:apply-templates select="*[local-name() = 'date'][@type='published']/*[local-name() = 'on']" mode="front"/>
+					</xsl:when>
+					<xsl:when test="*[local-name() = 'date'][@type='created']/*[local-name() = 'on']">
+						<xsl:apply-templates select="*[local-name() = 'date'][@type='created']/*[local-name() = 'on']" mode="front"/>
+					</xsl:when>
+				</xsl:choose>
 			</release-date>
 			<comm-ref>
 				<xsl:apply-templates select="*[local-name() = 'copyright']/*[local-name() = 'owner']/*[local-name() = 'organization']/*[local-name() = 'abbreviation']" mode="front"/>
@@ -382,9 +407,10 @@
 				<xsl:apply-templates mode="front_check"/>
 			</xsl:variable>			
 			<xsl:if test="normalize-space($front_check) != '' or count(xalan:nodeset($front_check)/*) &gt; 0">
-				<xsl:text>WARNING! There are unprocessed elements in bibdata:
-				</xsl:text>
+				<xsl:text>WARNING! There are unprocessed elements in bibdata:&#xa;</xsl:text>
+				<xsl:text>===================================&#xa;</xsl:text>
 				<xsl:apply-templates select="xalan:nodeset($front_check)" mode="display_check"/>
+				<xsl:text>&#xa;===================================&#xa;</xsl:text>
 			</xsl:if>
 		</iso-meta>
 	</xsl:template>
@@ -444,6 +470,7 @@
 																*[local-name() = 'bibdata']/*[local-name() = 'title'][@type = 'title-main'] |
 																*[local-name() = 'bibdata']/*[local-name() = 'title'][@type = 'title-part'] |
 																*[local-name() = 'bibdata']/*[local-name() = 'title'][@type = 'main'] |
+																*[local-name() = 'bibdata']/*[local-name() = 'title'][@type = 'title-amd'] |
 																*[local-name() = 'contributor'][*[local-name() = 'role']/@type='author']/*[local-name() = 'organization']/*[local-name() = 'abbreviation'] |																
 																*[local-name() = 'contributor'][*[local-name() = 'role']/@type='author']/*[local-name() = 'organization']/*[local-name() = 'name'] |
 																*[local-name() = 'ext']/*[local-name() = 'structuredidentifier']/*[local-name() = 'project-number'] |
@@ -454,6 +481,7 @@
 																*[local-name() = 'status']/*[local-name() = 'stage'] |
 																*[local-name() = 'status']/*[local-name() = 'substage'] |
 																*[local-name() = 'ext']/*[local-name() = 'doctype'] |
+																*[local-name() = 'ext']/*[local-name() = 'updates-document-type'] |
 																*[local-name() = 'docnumber'] |
 																*[local-name() = 'ext']/*[local-name() = 'structuredidentifier']/*[local-name() = 'partnumber'] |
 																*[local-name() = 'edition'] |
@@ -462,7 +490,8 @@
 																*[local-name() = 'language'] |
 																*[local-name() = 'docidentifier'] |
 																*[local-name() = 'docidentifier'][@type='iso-with-lang'] |
-																*[local-name() = 'date'][@type='published']/*[local-name() = 'on'] |
+																*[local-name() = 'date'][@type='published'] |
+																*[local-name() = 'date'][@type='created'] |
 																*[local-name() = 'bibdata']/*[local-name() = 'copyright']/*[local-name() = 'owner']/*[local-name() = 'organization']/*[local-name() = 'abbreviation'] |
 																*[local-name() = 'bibdata']/*[local-name() = 'copyright']/*[local-name() = 'owner']/*[local-name() = 'organization']/*[local-name() = 'name'] |
 																*[local-name() = 'ext']/*[local-name() = 'editorialgroup']/*[local-name() = 'secretariat'] |
@@ -508,11 +537,16 @@
 	<xsl:template match="*[local-name() = 'boilerplate']/*[local-name() = 'copyright-statement']/*[local-name() = 'clause']" priority="1">
 		<xsl:apply-templates/>
 	</xsl:template>
+	<xsl:template match="*[local-name() = 'boilerplate']/*[local-name() = 'copyright-statement']//*[local-name() = 'title']"  priority="1">
+		<copyright-statement>
+			<xsl:apply-templates/>
+		</copyright-statement>
+	</xsl:template>
 	<xsl:template match="*[local-name() = 'boilerplate']/*[local-name() = 'copyright-statement']//*[local-name() = 'p']"  priority="1">
 		<copyright-statement>
 			<xsl:apply-templates/>
 		</copyright-statement>
-	</xsl:template>	
+	</xsl:template>
 	<xsl:template match="*[local-name() = 'boilerplate']/*[local-name() = 'copyright-statement']//*[local-name() = 'p']//*[local-name() = 'br']"  priority="1">
 		<xsl:value-of select="'&#x2028;'"/><!-- linebreak -->
 	</xsl:template>	
@@ -1378,6 +1412,31 @@
 	
 	<xsl:template match="*[local-name() = 'title']/@depth"/>
 	<xsl:template match="*[local-name() = 'tab']"/>
+	
+	<xsl:template match="*[local-name() = 'amend']">
+		<!-- <p id="{@id}"> -->
+			<xsl:apply-templates />
+		<!-- </p> -->
+	</xsl:template>
+	
+	<xsl:template match="*[local-name() = 'amend']/*[local-name() = 'description']">
+		
+		<editing-instruction>
+			<xsl:if test="parent::*[local-name() = 'amend']/@id">
+				<xsl:attribute name="id"><xsl:value-of select="parent::*[local-name() = 'amend']/@id"/></xsl:attribute>
+			</xsl:if>
+			<xsl:if test="../@change">
+				<xsl:attribute name="content-type">
+					<xsl:value-of select="../@change"/>
+				</xsl:attribute>
+			</xsl:if>
+			<xsl:apply-templates />
+		</editing-instruction>
+	</xsl:template>
+	
+	<xsl:template match="*[local-name() = 'amend']/*[local-name() = 'newcontent']">
+		<xsl:apply-templates />
+	</xsl:template>
 	
 	<xsl:template name="getLevel">
 		<xsl:variable name="level_total" select="count(ancestor::*)"/>
