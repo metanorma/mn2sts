@@ -23,11 +23,11 @@ jobs:
         with:
           java-version: 1.8
 
-      - name: Use Metanorma
-        run: |
-          sudo apt-get update
-          curl -L https://raw.githubusercontent.com/metanorma/metanorma-linux-setup/master/ubuntu.sh | sudo bash
-          sudo chown -R $USER:$(id -gn $USER) $HOME/.config
+#      - name: Use Metanorma
+#        run: |
+#          sudo apt-get update
+#          curl -L https://raw.githubusercontent.com/metanorma/metanorma-linux-setup/master/ubuntu.sh | sudo bash
+#          sudo chown -R $USER:$(id -gn $USER) $HOME/.config
 
       - name: Install bundler
         run: |
