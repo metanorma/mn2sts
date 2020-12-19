@@ -629,7 +629,16 @@
 					<xsl:otherwise><xsl:value-of select="@obligation"/></xsl:otherwise>
 				</xsl:choose>
 			</xsl:attribute>
-			<label><xsl:value-of select="$section"/></label>
+			<label>
+				<xsl:choose>
+					<xsl:when test="ancestor::*[local-name() = 'amend']/*[local-name() = 'autonumber'][@type = 'annex']">
+						<xsl:value-of select="ancestor::*[local-name() = 'amend']/*[local-name() = 'autonumber'][@type = 'annex']/text()"/>
+					</xsl:when>
+					<xsl:otherwise>
+						<xsl:value-of select="$section"/>
+					</xsl:otherwise>
+				</xsl:choose>
+			</label>
 			<annex-type>(<xsl:value-of select="@obligation"/>)</annex-type>
 			<xsl:apply-templates />
 		</app>
@@ -984,6 +993,9 @@
 		<non-normative-example>
 			<label>
 				<xsl:text>EXAMPLE</xsl:text>
+				<xsl:if test="ancestor::*[local-name() = 'amend']/*[local-name() = 'autonumber'][@type = 'example']">
+					<xsl:text> </xsl:text><xsl:value-of select="ancestor::*[local-name() = 'amend']/*[local-name() = 'autonumber'][@type = 'example']/text()"/>
+				</xsl:if>
 				<xsl:if test="count(ancestor::*[local-name() = 'clause'][1]//*[local-name() = 'example']) &gt; 1">
 					<xsl:text> </xsl:text><xsl:number level="any" count="*[local-name() = 'example'][ancestor::*[local-name() = 'clause'][@id = $clause_id]]"/>
 				</xsl:if>
@@ -999,6 +1011,9 @@
 		<non-normative-note>
 			<label>
 				<xsl:text>NOTE</xsl:text>
+				<xsl:if test="ancestor::*[local-name() = 'amend']/*[local-name() = 'autonumber'][@type = 'note']">
+					<xsl:text> </xsl:text><xsl:value-of select="ancestor::*[local-name() = 'amend']/*[local-name() = 'autonumber'][@type = 'note']/text()"/>
+				</xsl:if>
 				<xsl:if test="count(ancestor::*[local-name() = 'clause'][1]//*[local-name() = 'note']) &gt; 1">
 					<xsl:text> </xsl:text><xsl:number level="any" count="*[local-name() = 'note'][ancestor::*[local-name() = 'clause'][@id = $clause_id]]"/>
 				</xsl:if>
@@ -1185,7 +1200,16 @@
 		<xsl:variable name="id" select="xalan:nodeset($elements)//element[@source_id = $current_id]/@id"/>
 		<xsl:variable name="section" select="xalan:nodeset($elements)//element[@source_id = $current_id]/@section"/>
 		<table-wrap id="{$id}" position="float">
-			<label><xsl:value-of select="$section"/></label>				
+			<label>
+				<xsl:choose>
+					<xsl:when test="ancestor::*[local-name() = 'amend']/*[local-name() = 'autonumber'][@type = 'table']">
+						<xsl:value-of select="ancestor::*[local-name() = 'amend']/*[local-name() = 'autonumber'][@type = 'table']/text()"/>
+					</xsl:when>
+					<xsl:otherwise>
+						<xsl:value-of select="$section"/>
+					</xsl:otherwise>
+				</xsl:choose>
+			</label>				
 			<xsl:apply-templates select="*[local-name() = 'name']" mode="table"/>				
 			<table width="100%">
 				<xsl:apply-templates select="*[local-name() = 'colgroup']" mode="table"/>
@@ -1287,7 +1311,16 @@
 		<xsl:variable name="id" select="xalan:nodeset($elements)//element[@source_id = $current_id]/@id"/>
 		<xsl:variable name="section" select="xalan:nodeset($elements)//element[@source_id = $current_id]/@section"/>
 		<fig fig-type="figure" id="{$id}">
-			<label><xsl:value-of select="$section"/></label>
+			<label>
+				<xsl:choose>
+					<xsl:when test="ancestor::*[local-name() = 'amend']/*[local-name() = 'autonumber'][@type = 'figure']">
+						<xsl:value-of select="ancestor::*[local-name() = 'amend']/*[local-name() = 'autonumber'][@type = 'figure']/text()"/>
+					</xsl:when>
+					<xsl:otherwise>
+						<xsl:value-of select="$section"/>
+					</xsl:otherwise>
+				</xsl:choose>
+			</label>
 			<xsl:apply-templates />
 		</fig>
 	</xsl:template>
@@ -1473,10 +1506,11 @@
 		</xsl:choose>
 	</xsl:template>
 	
-	
 	<xsl:template match="*[local-name() = 'amend']/*[local-name() = 'newcontent']">
 		<xsl:apply-templates />
 	</xsl:template>
+	
+	<xsl:template match="*[local-name() = 'amend']/*[local-name() = 'autonumber']"/>
 	
 	<xsl:template name="getLevel">
 		<xsl:variable name="level_total" select="count(ancestor::*)"/>
@@ -1510,7 +1544,6 @@
 				<xsl:when test="local-name() = 'dl'"><xsl:number format="a" level="any"/></xsl:when>
 				<xsl:when test="local-name() = 'bibitem' and ancestor::*[local-name() = 'references'][@normative='true']">norm_ref_<xsl:number/></xsl:when>
 				<xsl:when test="local-name() = 'bibitem'">ref_<xsl:number/></xsl:when>
-				<xsl:when test="local-name() = 'figure' or local-name() = 'image'"><xsl:number format="1" level="any"/></xsl:when>
 				<xsl:when test="ancestor::*[local-name() = 'bibliography']">
 					<xsl:value-of select="$sectionNum"/>
 				</xsl:when>
@@ -1521,6 +1554,7 @@
 					<!-- 1, 2, 3, 4, ... from main section (not annex, bibliography, ...) -->
 					<xsl:choose>
 						<xsl:when test="local-name() = 'table'"><xsl:number format="1" level="any" count="*[local-name() = 'sections']//*[local-name() = 'table']"/></xsl:when>
+						<xsl:when test="local-name() = 'figure'"><xsl:number format="1" level="any" count="*[local-name() = 'sections']//*[local-name() = 'figure']"/></xsl:when>
 						<xsl:when test="$level = 1">
 							<xsl:value-of select="$sectionNum"/>
 						</xsl:when>
