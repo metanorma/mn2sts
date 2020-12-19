@@ -738,6 +738,12 @@
 		
 	</xsl:template>
 	
+	<xsl:template match="*[local-name() = 'fn']/text()" priority="2">
+		<xsl:if test="normalize-space(.) != ''">
+			<p><xsl:value-of select="."/></p>
+		</xsl:if>
+	</xsl:template>
+	
 	
 	<xsl:template match="*[local-name() = 'clause'] | 
 																*[local-name() = 'references'][@normative='true'] | 
