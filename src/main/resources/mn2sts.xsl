@@ -362,17 +362,10 @@
 			<doc-ref>
 				<xsl:apply-templates select="*[local-name() = 'docidentifier'][@type='iso-with-lang']" mode="front"/>
 			</doc-ref>
-			<release-date>
-				<xsl:choose>
-					<xsl:when test="*[local-name() = 'date'][@type='published']/*[local-name() = 'on']">
-						<xsl:attribute name="date-type">published</xsl:attribute>
-						<xsl:apply-templates select="*[local-name() = 'date'][@type='published']/*[local-name() = 'on']" mode="front"/>
-					</xsl:when>
-					<xsl:when test="*[local-name() = 'date'][@type='created']/*[local-name() = 'on']">
-						<xsl:apply-templates select="*[local-name() = 'date'][@type='created']/*[local-name() = 'on']" mode="front"/>
-					</xsl:when>
-				</xsl:choose>
-			</release-date>
+			
+			<!-- <release-date> -->
+			<xsl:apply-templates select="*[local-name() = 'date']/*[local-name() = 'on']" mode="front"/>
+			
 			<comm-ref>
 				<xsl:apply-templates select="*[local-name() = 'copyright']/*[local-name() = 'owner']/*[local-name() = 'organization']/*[local-name() = 'abbreviation']" mode="front"/>
 				<xsl:apply-templates select="*[local-name() = 'ext']/*[local-name() = 'editorialgroup']/*[local-name() = 'technical-committee']" mode="front"/>
@@ -457,6 +450,17 @@
 		</xsl:if>
 	</xsl:template>
 	
+	<xsl:template match="*[local-name() = 'bibdata']/*[local-name() = 'date']/*[local-name() = 'on']" mode="front">
+		<release-date>
+			<xsl:if test="parent::*/@type">
+				<xsl:attribute name="date-type">
+					<xsl:value-of select="parent::*/@type"/>
+				</xsl:attribute>
+			</xsl:if>
+			<xsl:value-of select="."/>
+		</release-date>
+	</xsl:template>
+	
 
 	<!-- skip processed ^ attributes  and stop -->
 	<xsl:template match="*[local-name() = 'bibdata']/*[local-name() = 'ext']/*[local-name() = 'structuredidentifier']/*[local-name() = 'project-number']/@part |
@@ -490,8 +494,7 @@
 																*[local-name() = 'language'] |
 																*[local-name() = 'docidentifier'] |
 																*[local-name() = 'docidentifier'][@type='iso-with-lang'] |
-																*[local-name() = 'date'][@type='published'] |
-																*[local-name() = 'date'][@type='created'] |
+																*[local-name() = 'bibdata']/*[local-name() = 'date'] |
 																*[local-name() = 'bibdata']/*[local-name() = 'copyright']/*[local-name() = 'owner']/*[local-name() = 'organization']/*[local-name() = 'abbreviation'] |
 																*[local-name() = 'bibdata']/*[local-name() = 'copyright']/*[local-name() = 'owner']/*[local-name() = 'organization']/*[local-name() = 'name'] |
 																*[local-name() = 'ext']/*[local-name() = 'editorialgroup']/*[local-name() = 'secretariat'] |
@@ -1431,7 +1434,11 @@
 			<xsl:when test="$format = 'NISO'">
 				<editing-instruction>
 					<xsl:if test="parent::*[local-name() = 'amend']/@id">
-						<xsl:attribute name="id"><xsl:value-of select="parent::*[local-name() = 'amend']/@id"/></xsl:attribute>
+						<xsl:attribute name="id">
+							<xsl:value-of select="parent::*[local-name() = 'amend']/@id"/>
+							<xsl:variable name="pos"><xsl:number/></xsl:variable>
+							<xsl:if test="number($pos) &gt; 1">_<xsl:value-of select="$pos"/></xsl:if>
+						</xsl:attribute>
 					</xsl:if>
 					<xsl:if test="../@change">
 						<xsl:attribute name="content-type">
@@ -1503,6 +1510,7 @@
 				<xsl:when test="local-name() = 'dl'"><xsl:number format="a" level="any"/></xsl:when>
 				<xsl:when test="local-name() = 'bibitem' and ancestor::*[local-name() = 'references'][@normative='true']">norm_ref_<xsl:number/></xsl:when>
 				<xsl:when test="local-name() = 'bibitem'">ref_<xsl:number/></xsl:when>
+				<xsl:when test="local-name() = 'figure' or local-name() = 'image'"><xsl:number format="1" level="any"/></xsl:when>
 				<xsl:when test="ancestor::*[local-name() = 'bibliography']">
 					<xsl:value-of select="$sectionNum"/>
 				</xsl:when>
