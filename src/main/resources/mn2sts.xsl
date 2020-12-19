@@ -364,7 +364,28 @@
 			</doc-ref>
 			
 			<!-- <release-date> -->
-			<xsl:apply-templates select="*[local-name() = 'date']/*[local-name() = 'on']" mode="front"/>
+			<xsl:variable name="release-date">
+				<dates>
+					<xsl:apply-templates select="*[local-name() = 'date']/*[local-name() = 'on']" mode="front"/>
+				</dates>
+			</xsl:variable>
+			
+			<xsl:choose>				
+				<xsl:when test="$format = 'NISO'">
+					<xsl:copy-of select="xalan:nodeset($release-date)/dates/*"/>
+				</xsl:when>
+				<xsl:otherwise><!-- get last date for ISO format (allows only one release-date  -->
+					<xsl:choose>
+						<xsl:when test="count(xalan:nodeset($release-date)/dates/*) &gt; 1">
+							<xsl:copy-of select="xalan:nodeset($release-date)/dates/*[last()]"/>
+						</xsl:when>
+						<xsl:otherwise>
+							<!-- mandatory element for ISO -->
+							<release-date />
+						</xsl:otherwise>
+					</xsl:choose>
+				</xsl:otherwise>
+			</xsl:choose>
 			
 			<comm-ref>
 				<xsl:apply-templates select="*[local-name() = 'copyright']/*[local-name() = 'owner']/*[local-name() = 'organization']/*[local-name() = 'abbreviation']" mode="front"/>
