@@ -1232,7 +1232,13 @@
 				</xsl:choose>
 			</label>				
 			<xsl:apply-templates select="*[local-name() = 'name']" mode="table"/>				
-			<table width="100%">
+			<table>
+				<xsl:attribute name="width">
+					<xsl:choose>
+						<xsl:when test="@width"><xsl:value-of select="@width"/></xsl:when>
+						<xsl:otherwise>100%</xsl:otherwise>
+					</xsl:choose>
+				</xsl:attribute>
 				<xsl:apply-templates select="*[local-name() = 'colgroup']" mode="table"/>
 				<xsl:apply-templates select="*[local-name() = 'thead']" mode="table"/>
 				<xsl:apply-templates select="*[local-name() = 'tfoot']" mode="table"/>
