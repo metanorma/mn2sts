@@ -27,6 +27,12 @@
 	<xsl:variable name="elements">
 		<elements>
 			<xsl:apply-templates select="/*/*[local-name() = 'preface']/node()" mode="elements"/>
+      
+      <!-- Introduction in sections -->
+      <xsl:apply-templates select="/*/*[local-name() = 'sections']/*[local-name() = 'clause'][@type='intro']" mode="elements"> <!-- [0] -->
+				<xsl:with-param name="sectionNum" select="'0'"/>
+			</xsl:apply-templates>
+      
 			<!-- Scope -->
 			<xsl:apply-templates select="/*/*[local-name() = 'sections']/*[local-name() = 'clause'][@type='scope']" mode="elements"> <!-- [1] -->
 				<xsl:with-param name="sectionNum" select="'1'"/>
@@ -37,10 +43,23 @@
 				<xsl:with-param name="sectionNum" select="count(/*/*[local-name() = 'sections']/*[local-name() = 'clause'][@type='scope']) + 1"/>
 			</xsl:apply-templates>
 			
+      <!-- Terms and definitions -->
+		<xsl:apply-templates select="/*/*[local-name()='sections']/*[local-name()='terms'] | 
+																						/*/*[local-name()='sections']/*[local-name()='clause'][.//*[local-name()='terms']] |
+																						/*/*[local-name()='sections']/*[local-name()='definitions'] | 
+																						/*/*[local-name()='sections']/*[local-name()='clause'][.//*[local-name()='definitions']]" mode="elements"/>		
+				<!-- Another main sections -->
+		<xsl:apply-templates select="/*/*[local-name()='sections']/*[local-name() != 'terms' and 
+																																														local-name() != 'definitions' and 
+																																														not(@type='intro') and
+																																														not(@type='scope') and
+																																														not(local-name() = 'clause' and .//*[local-name()='terms']) and
+																																														not(local-name() = 'clause' and .//*[local-name()='definitions'])]" mode="elements"/>
+                                                                                            
 			<!-- Other main sections: Terms, etc... -->					
-			<xsl:apply-templates select="/*/*[local-name() = 'sections']/*[not(@type='scope')]" mode="elements"> <!-- position() &gt; 1  -->
+			<!-- <xsl:apply-templates select="/*/*[local-name() = 'sections']/*[not(@type='scope') and not(@type='intro')]" mode="elements">
 				<xsl:with-param name="sectionNumSkew" select="'1'"/>
-			</xsl:apply-templates>
+			</xsl:apply-templates> -->
 			
 			<xsl:apply-templates select="/*/*[local-name() = 'annex']" mode="elements"/>
 			
@@ -138,11 +157,12 @@
 						<!-- presentation xml data -->
 						<xsl:value-of select="*[local-name() = 'title']/*[local-name() = 'tab'][1]/preceding-sibling::node()"/>
 					</xsl:when>
-					<xsl:when test="$section_ = '0'"></xsl:when>
+					<xsl:when test="$section_ = '0' and not(@type='intro')"></xsl:when>
 					<xsl:otherwise>
 						<xsl:choose>
 							<xsl:when test="$name = 'annex'">Annex <xsl:value-of select="$section_"/></xsl:when>
 							<xsl:when test="$name = 'table'">Table <xsl:value-of select="$section_"/></xsl:when>
+							<xsl:when test="$name = 'figure'">Figure&#xA0;<xsl:value-of select="$section_"/></xsl:when>
 							<xsl:otherwise><xsl:value-of select="$section_"/></xsl:otherwise>
 						</xsl:choose>
 					</xsl:otherwise>
@@ -151,7 +171,7 @@
 			
 			<element source_id="{$source_id}" id="{$id}" section="{$section}" parent="{$name}"/>
 			<xsl:if test="$debug = 'true'">
-				<xsl:message><xsl:value-of select="$source_id"/></xsl:message>
+				<!-- <xsl:message><xsl:value-of select="$source_id"/></xsl:message> -->
 			</xsl:if>
 		</xsl:if>
 		
@@ -208,7 +228,14 @@
 			
 			
 			<xsl:if test="*[local-name() = 'sections'] or *[local-name() = 'bibliography']/*[local-name() = 'references'][@normative='true']">
-				<body>					
+				<body>				
+        
+          <!-- Introduction in sections -->
+          <xsl:apply-templates select="*[local-name() = 'sections']/*[local-name() = 'clause'][@type='intro']"> <!-- [0] -->
+            <xsl:with-param name="sectionNum" select="'0'"/>
+          </xsl:apply-templates>
+          
+        
 					<!-- Scope -->
 					<xsl:apply-templates select="*[local-name() = 'sections']/*[local-name() = 'clause'][@type='scope']"> <!-- [1] -->
 						<xsl:with-param name="sectionNum" select="'1'"/>
@@ -219,10 +246,23 @@
 						<xsl:with-param name="sectionNum" select="count(*[local-name() = 'sections']/*[local-name() = 'clause'][@type='scope']) + 1"/>
 					</xsl:apply-templates>
 					
+          <!-- Terms and definitions -->
+          <xsl:apply-templates select="*[local-name()='sections']/*[local-name()='terms'] | 
+                                                  *[local-name()='sections']/*[local-name()='clause'][.//*[local-name()='terms']] |
+                                                  *[local-name()='sections']/*[local-name()='definitions'] | 
+                                                  *[local-name()='sections']/*[local-name()='clause'][.//*[local-name()='definitions']]" />		
+              <!-- Another main sections -->
+          <xsl:apply-templates select="*[local-name()='sections']/*[local-name() != 'terms' and 
+                                                                                                  local-name() != 'definitions' and 
+                                                                                                  not(@type='intro') and
+                                                                                                  not(@type='scope') and
+                                                                                                  not(local-name() = 'clause' and .//*[local-name()='terms']) and
+                                                                                                  not(local-name() = 'clause' and .//*[local-name()='definitions'])]" />
+          
 					<!-- Other main sections: Terms, etc... -->					
-					<xsl:apply-templates select="*[local-name() = 'sections']/*[not(@type='scope')]"> <!-- position() &gt; 1  -->
+					<!-- <xsl:apply-templates select="*[local-name() = 'sections']/*[not(@type='scope') and not(@type='intro')]">
 						<xsl:with-param name="sectionNumSkew" select="'1'"/>
-					</xsl:apply-templates>
+					</xsl:apply-templates> -->
 					
 				</body>	
 			</xsl:if>
@@ -800,8 +840,9 @@
 		<xsl:variable name="sec_type">
 			<xsl:choose>
 				<xsl:when test="@type='scope'">scope</xsl:when>
+				<xsl:when test="@type='intro'">intro</xsl:when>
 				<xsl:when test="@normative='true'">norm-refs</xsl:when>
-				<xsl:when test="@id = 'tda' or @id = 'terms'">terms</xsl:when>
+				<xsl:when test="@id = 'tda' or @id = 'terms' or local-name() = 'terms'">terms</xsl:when>
 				<xsl:otherwise><!-- <xsl:value-of select="@id"/> --></xsl:otherwise>
 			</xsl:choose>
 		</xsl:variable>
@@ -947,7 +988,8 @@
 				<xsl:apply-templates />
 			</xsl:when>
 			<xsl:otherwise>
-				<p id="{@id}">
+				<p>
+					<xsl:copy-of select="@id"/>
 					<xsl:apply-templates />
 				</p>
 			</xsl:otherwise>
@@ -956,16 +998,25 @@
 	
 	
 	<xsl:template match="*[local-name() = 'ul']">
-		<list list-type="bullet"> <!-- even when <label>—</label> ! -->
+		<list> 
+			<xsl:apply-templates select="@*"/>
+			<xsl:attribute name="list-type">
+				<xsl:choose>
+						<xsl:when test="normalize-space(@type) = ''">bullet</xsl:when> <!-- even when <label>—</label> ! -->
+						<xsl:otherwise><xsl:value-of select="@type"/></xsl:otherwise>
+					</xsl:choose>
+			</xsl:attribute>
 			<xsl:apply-templates />
 		</list>
 		<xsl:for-each select="*[local-name() = 'note']">
 			<xsl:call-template name="note"/>
 		</xsl:for-each>
 	</xsl:template>
+	<xsl:template match="*[local-name() = 'ul']/@type"/>
 	
 	<xsl:template match="*[local-name() = 'ol']">
 		<list>
+			<xsl:apply-templates select="@*"/>
 			<xsl:attribute name="list-type">
 				<xsl:choose>
 					<xsl:when test="@type = 'arabic'">alpha-lower</xsl:when>
@@ -983,16 +1034,19 @@
 			<xsl:call-template name="note"/>
 		</xsl:for-each>
 	</xsl:template>
+	<xsl:template match="*[local-name() = 'ol']/@type"/>
+
 
 	<xsl:template match="*[local-name() = 'ul']/*[local-name() = 'note'] | *[local-name() = 'ol']/*[local-name() = 'note']" priority="2"/>
 	
 	<xsl:template match="*[local-name() = 'li']">
 		<list-item>
-			<xsl:if test="@id">
+			<!-- <xsl:if test="@id">
 				<xsl:attribute name="id"><xsl:value-of select="@id"/></xsl:attribute>
-			</xsl:if>
+			</xsl:if> -->
+			<xsl:copy-of select="@id"/>
 			<xsl:choose>
-				<xsl:when test="local-name(..) = 'ul'"><label>—</label></xsl:when>
+				<xsl:when test="local-name(..) = 'ul' and @type != 'simple'"><label>—</label></xsl:when>
 				<xsl:when test="local-name(..) = 'ol'">
 					<xsl:variable name="type" select="parent::*/@type"/>
 					<xsl:choose>
@@ -1033,10 +1087,10 @@
 			<label>
 				<xsl:text>NOTE</xsl:text>
 				<xsl:if test="ancestor::*[local-name() = 'amend']/*[local-name() = 'autonumber'][@type = 'note']">
-					<xsl:text> </xsl:text><xsl:value-of select="ancestor::*[local-name() = 'amend']/*[local-name() = 'autonumber'][@type = 'note']/text()"/>
+					<xsl:text>&#xA0;</xsl:text><xsl:value-of select="ancestor::*[local-name() = 'amend']/*[local-name() = 'autonumber'][@type = 'note']/text()"/>
 				</xsl:if>
 				<xsl:if test="count(ancestor::*[local-name() = 'clause'][1]//*[local-name() = 'note']) &gt; 1">
-					<xsl:text> </xsl:text><xsl:number level="any" count="*[local-name() = 'note'][ancestor::*[local-name() = 'clause'][@id = $clause_id]]"/>
+					<xsl:text>&#xA0;</xsl:text><xsl:number level="any" count="*[local-name() = 'note'][ancestor::*[local-name() = 'clause'][@id = $clause_id]]"/>
 				</xsl:if>
 			</label>
 			<xsl:apply-templates/>
@@ -1059,7 +1113,19 @@
 	</xsl:template>
 	
 	<xsl:template match="*[local-name() = 'link']">
-		<uri><xsl:value-of select="@target"/></uri>
+    <xsl:choose>
+      <xsl:when test="normalize-space() = ''">
+        <uri><xsl:value-of select="@target"/></uri>
+      </xsl:when>
+      <xsl:otherwise>
+        <ext-link xlink:type="simple">
+          <xsl:attribute name="xlink:href">
+            <xsl:value-of select="@target"/>
+          </xsl:attribute>
+          <xsl:apply-templates />
+        </ext-link>
+      </xsl:otherwise>
+    </xsl:choose>
 	</xsl:template>
 	
 	<xsl:template match="*[local-name() = 'strong']">
@@ -1106,6 +1172,7 @@
 		<xsl:variable name="parent" select="xalan:nodeset($elements)//element[@source_id = current()/@target]/@parent"/>
 		<xsl:variable name="ref_type">
 			<xsl:choose>
+        <xsl:when test="$parent = 'figure'">fig</xsl:when>
 				<xsl:when test="$parent = 'table'">table</xsl:when>
 				<xsl:when test="$parent = 'annex'">app</xsl:when>
 				<xsl:when test="$parent = 'fn'">fn</xsl:when>
@@ -1113,15 +1180,62 @@
 			</xsl:choose>
 		</xsl:variable>
 	
-		<xref ref-type="{$ref_type}" rid="{$id}">
+		<xref > <!-- ref-type="{$ref_type}" rid="{$id}" --> <!-- replaced by xsl:attribute name=... for save ordering -->
+      <xsl:attribute name="ref-type">
+        <xsl:value-of select="$ref_type"/>
+      </xsl:attribute>
+      <xsl:attribute name="rid">
+        <xsl:value-of select="$id"/>
+      </xsl:attribute>
 			<xsl:if test="normalize-space($id) = ''">
 				<xsl:attribute name="rid"><xsl:value-of select="@target"/></xsl:attribute>
 			</xsl:if>
-			<xsl:value-of select="$section"/>
+      
+      <xsl:variable name="text_">
+        <xsl:value-of select="translate($section, '&#xA0;', ' ')"/>
+      </xsl:variable>
+      <xsl:variable name="text">
+        <xsl:value-of select="normalize-space($text_)"/>
+        <xsl:if test="normalize-space($text_) = ''"><!-- in case of term -->
+          <xsl:value-of select="xalan:nodeset($elements)//element[@id = current()/@target]/@section"/>
+        </xsl:if>
+      </xsl:variable>
+      <xsl:choose>
+        <xsl:when test="./*">
+          <xsl:apply-templates mode="internalFormat">
+            <xsl:with-param name="text" select="$text"/>
+          </xsl:apply-templates>
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:value-of select="$text"/>
+        </xsl:otherwise>
+      </xsl:choose>
 		</xref>
-		
 	</xsl:template>
 	
+  <xsl:template match="*[local-name() = 'strong'] | *[local-name() = 'em'] | *" mode="internalFormat">
+    <xsl:param name="text"/>
+    <xsl:variable name="element">
+      <xsl:choose>
+        <xsl:when test="local-name() = 'strong'">bold</xsl:when>
+        <xsl:when test="local-name() = 'em'">italic</xsl:when>
+      </xsl:choose>
+    </xsl:variable>
+    <xsl:element name="{$element}">
+      <xsl:choose>
+        <xsl:when test="./*">
+          <xsl:apply-templates  mode="internalFormat">
+            <xsl:with-param name="text" select="$text"/>
+          </xsl:apply-templates>
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:value-of select="$text"/>
+        </xsl:otherwise>
+      </xsl:choose>
+    </xsl:element>
+  </xsl:template>
+  
+  
 	<!-- need to be tested (find original NISO) -->
 	<xsl:template match="*[local-name() = 'callout']">
 		<xref ref-type="other" rid="{@target}">
@@ -1220,32 +1334,53 @@
 		</xsl:variable>
 		<xsl:variable name="id" select="xalan:nodeset($elements)//element[@source_id = $current_id]/@id"/>
 		<xsl:variable name="section" select="xalan:nodeset($elements)//element[@source_id = $current_id]/@section"/>
-		<table-wrap id="{$id}" position="float">
-			<label>
+    
+    <xsl:variable name="wrap-element">
+      <xsl:choose>
+        <xsl:when test="ancestor::*[local-name() = 'figure']">array</xsl:when>
+        <xsl:otherwise>table-wrap</xsl:otherwise>
+      </xsl:choose>
+    </xsl:variable>
+    
+    <xsl:element name="{$wrap-element}">
+		<!-- <table-wrap id="{$id}"> --> <!-- position="float" -->
+      <xsl:attribute name="id">
+        <xsl:value-of select="$id"/>
+      </xsl:attribute>
+			<xsl:copy-of select="@id"/>
+			<xsl:variable name="label">
 				<xsl:choose>
 					<xsl:when test="ancestor::*[local-name() = 'amend']/*[local-name() = 'autonumber'][@type = 'table']">
 						<xsl:value-of select="ancestor::*[local-name() = 'amend']/*[local-name() = 'autonumber'][@type = 'table']/text()"/>
 					</xsl:when>
+          <xsl:when test="ancestor::*[local-name() = 'figure']"></xsl:when>
 					<xsl:otherwise>
 						<xsl:value-of select="$section"/>
 					</xsl:otherwise>
 				</xsl:choose>
-			</label>				
+			</xsl:variable>
+			<xsl:if test="normalize-space($label) != ''">
+				<label>
+					<xsl:value-of select="$label"/>
+				</label>
+			</xsl:if>
 			<xsl:apply-templates select="*[local-name() = 'name']" mode="table"/>				
 			<table>
-				<xsl:attribute name="width">
+				<xsl:copy-of select="@*[not(local-name() = 'id')]"/>
+				<!-- <xsl:attribute name="width">
 					<xsl:choose>
 						<xsl:when test="@width"><xsl:value-of select="@width"/></xsl:when>
 						<xsl:otherwise>100%</xsl:otherwise>
 					</xsl:choose>
-				</xsl:attribute>
+				</xsl:attribute> -->
 				<xsl:apply-templates select="*[local-name() = 'colgroup']" mode="table"/>
 				<xsl:apply-templates select="*[local-name() = 'thead']" mode="table"/>
 				<xsl:apply-templates select="*[local-name() = 'tfoot']" mode="table"/>
 				<xsl:apply-templates select="*[local-name() = 'tbody']" mode="table"/>
 				<xsl:apply-templates />
 			</table>			
-		</table-wrap>
+		<!-- </table-wrap> -->
+    </xsl:element>
 		<!-- move notes outside table -->
 		<xsl:for-each select="*[local-name() = 'note']">
 			<xsl:call-template name="note"/>
@@ -1277,9 +1412,9 @@
 	<xsl:template match="*[local-name() = 'th']">
 		<th>
 			<xsl:apply-templates select="@*"/>
-			<bold>
+			<!-- <bold> -->
 				<xsl:apply-templates />
-			</bold>
+			<!-- </bold> -->
 		</th>
 	</xsl:template>
 	
@@ -1377,6 +1512,12 @@
 		</graphic>
 	</xsl:template>
 	
+  <xsl:template match="*[local-name() = 'image'][not(parent::*[local-name() = 'figure'])]">
+    <graphic>
+			<xsl:apply-templates select="@*"/>
+		</graphic>
+  </xsl:template>
+  
 	<xsl:template match="*[local-name() = 'image']/@src">
 		<xsl:attribute name="xlink:href">
 			<xsl:value-of select="."/>
