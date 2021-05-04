@@ -735,7 +735,7 @@
 		<xsl:variable name="id" select="xalan:nodeset($elements)//element[@source_id = $current_id]/@id"/>
 		
 		<ref>
-			<xsl:if test="@type">
+			<xsl:if test="normalize-space(@type) != ''">
 				<xsl:attribute name="content-type">
 					<xsl:value-of select="@type"/>
 				</xsl:attribute>
@@ -745,16 +745,37 @@
 					<xsl:number format="_1" count="*[local-name() = 'references'][not(@normative='true')]"/>
 				</xsl:if>
 			</xsl:attribute>
-			<label><xsl:number format="[1]"/></label>
-			<std>
-				<xsl:if test="*[local-name() = 'docidentifier'][@type = 'URN']">
-					<xsl:attribute name="std-id"><xsl:value-of select="*[local-name() = 'docidentifier'][@type = 'URN']"/></xsl:attribute>
-				</xsl:if>
-				<std-ref><xsl:value-of select="*[local-name() = 'docidentifier']"/></std-ref>
-				<xsl:apply-templates select="*[local-name() = 'note']"/>				
-				<xsl:apply-templates select="*[local-name() = 'title'][(@type = 'main' and @language = 'en') or not(@type and @language)]"/>				
-				<xsl:apply-templates select="*[local-name() = 'formattedref']"/>
-			</std>
+			<!-- <label><xsl:number format="[1]"/></label> --> <!-- see docidentifier @type="metanorma" -->
+			
+			<xsl:choose>
+				<xsl:when test="count(*) = 2 and *[local-name() = 'docidentifier'][@type='metanorma'] and *[local-name() = 'title']">
+					<xsl:apply-templates select="*[local-name() = 'docidentifier']"/>
+					<xsl:apply-templates select="*[local-name() = 'title']" mode="mixed_citation"/>
+				</xsl:when>
+				<xsl:otherwise>
+					<std>
+						<xsl:if test="*[local-name() = 'docidentifier'][@type = 'URN']">
+							<xsl:attribute name="std-id"><xsl:value-of select="*[local-name() = 'docidentifier'][@type = 'URN']"/></xsl:attribute>
+						</xsl:if>
+						<xsl:if test="*[local-name() = 'docidentifier']">
+							<std-ref><xsl:value-of select="*[local-name() = 'docidentifier']"/></std-ref>
+						</xsl:if>
+						
+						<xsl:choose>
+							<xsl:when test="*[local-name() = 'note'] or *[local-name() = 'title'][(@type = 'main' and @language = 'en') or not(@type and @language)] or *[local-name() = 'formattedref']">
+								<xsl:apply-templates select="*[local-name() = 'note']"/>				
+								<xsl:apply-templates select="*[local-name() = 'title'][(@type = 'main' and @language = 'en') or not(@type and @language)]"/>				
+								<xsl:apply-templates select="*[local-name() = 'formattedref']"/>
+							</xsl:when>
+							<xsl:otherwise>
+								<xsl:apply-templates />
+							</xsl:otherwise>
+						</xsl:choose>
+					</std>
+				</xsl:otherwise>
+			</xsl:choose>
+			
+			
 			
 		</ref>
 		
@@ -765,12 +786,33 @@
 		<title><xsl:apply-templates/></title>
 	</xsl:template>
 	
+	<xsl:template match="*[local-name() = 'bibitem']/*[local-name() = 'title']" mode="mixed_citation">
+		<mixed-citation><xsl:apply-templates/></mixed-citation>
+	</xsl:template>
+	
 	<xsl:template match="*[local-name() = 'bibitem']/*[local-name() = 'formattedref']">
 		<title><xsl:apply-templates/></title>
 	</xsl:template>
 	
+	<xsl:template match="*[local-name() = 'bibitem']/*[local-name() = 'docidentifier'][@type = 'metanorma']">
+		<label><xsl:apply-templates /></label>
+	</xsl:template>
+	
 	<xsl:template match="*[local-name() = 'formattedref']/*[local-name() = 'em']" priority="2">
 		<xsl:apply-templates/>
+	</xsl:template>
+	
+	<xsl:template match="*[local-name() = 'bibitem']/*[local-name() = 'eref']" priority="2">
+		<xsl:variable name="reference" select="@bibitemid"/>
+		<xsl:variable name="docidentifier_URN" select="//*[local-name() = 'bibitem'][@id = $reference]/*[local-name() = 'docidentifier'][@type = 'URN']"/>
+		<xsl:if test="$docidentifier_URN != ''">
+			<xsl:attribute name="std-id">
+				<xsl:value-of select="$docidentifier_URN"/>
+			</xsl:attribute>
+		</xsl:if>
+		<std-ref><xsl:value-of select="java:replaceAll(java:java.lang.String.new(@citeas),'--','—')"/></std-ref>
+		<xsl:apply-templates select="*[local-name() = 'localityStack']"/>
+		<xsl:apply-templates />
 	</xsl:template>
 	
 	<xsl:template match="*[local-name() = 'bibitem']/*[local-name() = 'note'] | *[local-name() = 'fn'] " priority="2">
