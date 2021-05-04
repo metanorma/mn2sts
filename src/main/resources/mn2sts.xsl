@@ -160,8 +160,8 @@
 					<xsl:when test="$section_ = '0' and not(@type='intro')"></xsl:when>
 					<xsl:otherwise>
 						<xsl:choose>
-							<xsl:when test="$name = 'annex'">Annex <xsl:value-of select="$section_"/></xsl:when>
-							<xsl:when test="$name = 'table'">Table <xsl:value-of select="$section_"/></xsl:when>
+							<xsl:when test="$name = 'annex'">Annex&#xA0;<xsl:value-of select="$section_"/></xsl:when>
+							<xsl:when test="$name = 'table'">Table&#xA0;<xsl:value-of select="$section_"/></xsl:when>
 							<xsl:when test="$name = 'figure'">Figure&#xA0;<xsl:value-of select="$section_"/></xsl:when>
 							<xsl:otherwise><xsl:value-of select="$section_"/></xsl:otherwise>
 						</xsl:choose>
@@ -989,7 +989,8 @@
 			</xsl:when>
 			<xsl:otherwise>
 				<p>
-					<xsl:copy-of select="@id"/>
+					<!-- <xsl:copy-of select="@id"/> -->
+					<xsl:apply-templates select="@*"/>
 					<xsl:apply-templates />
 				</p>
 			</xsl:otherwise>
@@ -1019,7 +1020,8 @@
 			<xsl:apply-templates select="@*"/>
 			<xsl:attribute name="list-type">
 				<xsl:choose>
-					<xsl:when test="@type = 'arabic'">alpha-lower</xsl:when>
+					<!-- <xsl:when test="@type = 'arabic'">alpha-lower</xsl:when> -->
+					<xsl:when test="@type = 'arabic'">order</xsl:when>
 					<xsl:otherwise>
 						<xsl:choose>
 							<xsl:when test="normalize-space(@type) = ''">alpha-lower</xsl:when>
@@ -1035,7 +1037,7 @@
 		</xsl:for-each>
 	</xsl:template>
 	<xsl:template match="*[local-name() = 'ol']/@type"/>
-
+	<xsl:template match="*[local-name() = 'ol']/@start"/>
 
 	<xsl:template match="*[local-name() = 'ul']/*[local-name() = 'note'] | *[local-name() = 'ol']/*[local-name() = 'note']" priority="2"/>
 	
@@ -1049,12 +1051,24 @@
 				<xsl:when test="local-name(..) = 'ul' and @type != 'simple'"><label>—</label></xsl:when>
 				<xsl:when test="local-name(..) = 'ol'">
 					<xsl:variable name="type" select="parent::*/@type"/>
+					<xsl:variable name="start_value">
+						<xsl:choose>
+							<xsl:when test="normalize-space(parent::*/@start) != ''">
+								<xsl:value-of select="number(parent::*/@start) - 1"/><!-- if start="3" then start_value=2 + xsl:number(1) = 3 -->
+							</xsl:when>
+							<xsl:otherwise>0</xsl:otherwise>
+						</xsl:choose>
+					</xsl:variable>
+					<xsl:variable name="curr_value">
+						<xsl:number/>
+					</xsl:variable>
+					
 					<xsl:choose>
 						<xsl:when test="$type = 'arabic'">
-							<label><xsl:number format="a)"/></label>
+							<label><xsl:number value="$start_value + $curr_value" format="1)"/></label>
 						</xsl:when>
 						<xsl:otherwise>
-							<label><xsl:number format="a)"/></label>
+							<label><xsl:number value="$start_value + $curr_value" format="a)" lang="en"/></label>
 						</xsl:otherwise>
 					</xsl:choose>
 				</xsl:when>
