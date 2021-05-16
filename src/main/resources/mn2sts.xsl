@@ -229,8 +229,14 @@
 			
 			
 			<xsl:if test="*[local-name() = 'sections'] or *[local-name() = 'bibliography']/*[local-name() = 'references'][@normative='true']">
-				<body>				
-        
+				<body>
+				
+					<xsl:if test="*[local-name() = 'bibdata']/*[local-name() = 'copyright']/*[local-name() = 'owner']/*[local-name() = 'organization']/*[local-name() = 'abbreviation'] = 'BSI'">
+						<xsl:apply-templates select="*[local-name() = 'preface']/*[local-name() = 'introduction']" mode="front_preface"> <!-- [0] -->
+							<xsl:with-param name="skipIntroduction">false</xsl:with-param>
+						</xsl:apply-templates>
+					</xsl:if>
+					
           <!-- Introduction in sections -->
           <xsl:apply-templates select="*[local-name() = 'sections']/*[local-name() = 'clause'][@type='intro']"> <!-- [0] -->
             <xsl:with-param name="sectionNum" select="'0'"/>
@@ -746,16 +752,23 @@
 	
 	
 	<xsl:template match="*[local-name() = 'preface']/*" mode="front_preface">
+		<xsl:param name="skipIntroduction">true</xsl:param>
 		<xsl:variable name="name" select="local-name()"/>
-		<xsl:variable name="sec_type">
-			<xsl:choose>
-				<xsl:when test="$name = 'introduction'">intro</xsl:when>
-				<xsl:otherwise><xsl:value-of select="$name"/></xsl:otherwise>
-			</xsl:choose>
-		</xsl:variable>
-		<sec id="sec_{$sec_type}" sec-type="{$sec_type}">
-			<xsl:apply-templates />
-		</sec>
+		<xsl:choose>
+			<!-- For BSI, Introduction section placed in body -->
+			<xsl:when test="$skipIntroduction = 'true' and $name = 'introduction' and /*/*[local-name() = 'bibdata']/*[local-name() = 'copyright']/*[local-name() = 'owner']/*[local-name() = 'organization']/*[local-name() = 'abbreviation'] = 'BSI'"></xsl:when>
+			<xsl:otherwise>
+				<xsl:variable name="sec_type">
+					<xsl:choose>
+						<xsl:when test="$name = 'introduction'">intro</xsl:when>
+						<xsl:otherwise><xsl:value-of select="$name"/></xsl:otherwise>
+					</xsl:choose>
+				</xsl:variable>
+				<sec id="sec_{$sec_type}" sec-type="{$sec_type}">
+					<xsl:apply-templates />
+				</sec>
+			</xsl:otherwise>
+		</xsl:choose>
 	</xsl:template>
 	
 	
