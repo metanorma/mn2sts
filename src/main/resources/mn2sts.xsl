@@ -22,6 +22,8 @@
 	<xsl:variable name="lower">abcdefghijklmnopqrstuvwxyz</xsl:variable> 
 	<xsl:variable name="upper">ABCDEFGHIJKLMNOPQRSTUVWXYZ</xsl:variable>
 	
+	<xsl:variable name="organization" select="/*/*[local-name() = 'bibdata']/*[local-name() = 'copyright']/*[local-name() = 'owner']/*[local-name() = 'organization']/*[local-name() = 'abbreviation']"/>
+	
 	<!-- ====================================================================== -->
 	<!-- ====================================================================== -->
 	<xsl:variable name="elements">
@@ -231,7 +233,7 @@
 			<xsl:if test="*[local-name() = 'sections'] or *[local-name() = 'bibliography']/*[local-name() = 'references'][@normative='true']">
 				<body>
 				
-					<xsl:if test="*[local-name() = 'bibdata']/*[local-name() = 'copyright']/*[local-name() = 'owner']/*[local-name() = 'organization']/*[local-name() = 'abbreviation'] = 'BSI'">
+					<xsl:if test="$organization = 'BSI'">
 						<xsl:apply-templates select="*[local-name() = 'preface']/*[local-name() = 'introduction']" mode="front_preface"> <!-- [0] -->
 							<xsl:with-param name="skipIntroduction">false</xsl:with-param>
 						</xsl:apply-templates>
@@ -756,7 +758,7 @@
 		<xsl:variable name="name" select="local-name()"/>
 		<xsl:choose>
 			<!-- For BSI, Introduction section placed in body -->
-			<xsl:when test="$skipIntroduction = 'true' and $name = 'introduction' and /*/*[local-name() = 'bibdata']/*[local-name() = 'copyright']/*[local-name() = 'owner']/*[local-name() = 'organization']/*[local-name() = 'abbreviation'] = 'BSI'"></xsl:when>
+			<xsl:when test="$skipIntroduction = 'true' and $name = 'introduction' and $organization = 'BSI'"></xsl:when>
 			<xsl:otherwise>
 				<xsl:variable name="sec_type">
 					<xsl:choose>
@@ -1308,7 +1310,29 @@
 				</xsl:attribute>
 			</xsl:if>
 			
-			<std-ref><xsl:value-of select="java:replaceAll(java:java.lang.String.new(@citeas),'--','—')"/></std-ref>
+			<std-ref>
+				<xsl:variable name="citeas_" select="java:replaceAll(java:java.lang.String.new(@citeas),'--','—')"/>
+				<xsl:variable name="citeas">
+					<xsl:choose>
+						<!-- if citeas enclosed in [ ], then remove it -->
+						<xsl:when test="starts-with($citeas_, '[') and substring($citeas_, string-length($citeas_)) = ']'">
+							<xsl:value-of select="substring($citeas_, 2, string-length($citeas_) - 2)"/>
+						</xsl:when>
+						<xsl:otherwise>
+							<xsl:value-of select="$citeas_"/>
+						</xsl:otherwise>
+					</xsl:choose>
+				</xsl:variable>
+				<xsl:choose>
+					<xsl:when test="$organization = 'BSI'">
+						<xsl:value-of select="translate($citeas, ' ', '&#xA0;')"/><!-- replace space to non-break space -->
+					</xsl:when>
+					<xsl:otherwise>
+						<xsl:value-of select="$citeas"/>
+					</xsl:otherwise>
+				</xsl:choose>
+				
+			</std-ref>
 			<xsl:apply-templates select="*[local-name() = 'localityStack']"/>
 		</std>
 	</xsl:template>
