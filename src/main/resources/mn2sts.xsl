@@ -166,6 +166,10 @@
 					<xsl:when test="local-name() = 'term' and normalize-space(*[local-name() = 'name']) != '' and  normalize-space(translate(*[local-name() = 'name'], '0123456789.', '')) = ''">
 						<xsl:value-of select="*[local-name() = 'name']"/>
 					</xsl:when>
+					<xsl:when test="local-name() = 'figure' and contains(*[local-name() = 'name'], '&#8212; ')">
+						<xsl:variable name="name" select="substring-before(*[local-name() = 'name'], '&#8212; ')"/>
+						<xsl:value-of select="translate(normalize-space(translate($name, '&#xa0;', ' ')), ' ', '&#xa0;')"/>
+					</xsl:when>
 					<xsl:when test="$section_ = '0' and not(@type='intro')"></xsl:when>
 					<xsl:otherwise>
 						<xsl:choose>
@@ -1745,6 +1749,17 @@
 				<xsl:apply-templates/>
 			</title>
 		</caption>
+	</xsl:template>
+	
+	<xsl:template match="*[local-name()='table' or local-name()='figure']/*[local-name() = 'name']/node()[1][self::text()]" priority="2">
+		<xsl:choose>
+			<xsl:when test="contains(., '—')">
+				<xsl:value-of select="normalize-space(substring-after(., '—'))"/>
+			</xsl:when>
+			<xsl:otherwise>
+				<xsl:value-of select="."/>
+			</xsl:otherwise>
+		</xsl:choose>
 	</xsl:template>
 	
 	<xsl:template match="*[local-name() = 'figure']/*[local-name() = 'image']">
