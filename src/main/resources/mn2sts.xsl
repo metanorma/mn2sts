@@ -49,7 +49,9 @@
 		<xsl:apply-templates select="/*/*[local-name()='sections']/*[local-name()='terms'] | 
 																						/*/*[local-name()='sections']/*[local-name()='clause'][.//*[local-name()='terms']] |
 																						/*/*[local-name()='sections']/*[local-name()='definitions'] | 
-																						/*/*[local-name()='sections']/*[local-name()='clause'][.//*[local-name()='definitions']]" mode="elements"/>		
+																						/*/*[local-name()='sections']/*[local-name()='clause'][.//*[local-name()='definitions']]" mode="elements">
+			<xsl:with-param name="sectionNumSkew" select="'1'"/>
+		</xsl:apply-templates>
 				<!-- Another main sections -->
 		<xsl:apply-templates select="/*/*[local-name()='sections']/*[local-name() != 'terms' and 
 																																														local-name() != 'definitions' and 
@@ -128,6 +130,7 @@
 			
 			<xsl:variable name="id">
 				<xsl:choose>
+					<xsl:when test="$organization = 'BSI' and @id"><xsl:value-of select="@id"/></xsl:when>
 					<xsl:when test="$change_id = 'false'"><xsl:value-of select="$source_id"/></xsl:when>
 					<xsl:when test="$name = 'li'"><xsl:value-of select="$source_id"/></xsl:when>
 					<xsl:otherwise>
@@ -159,6 +162,9 @@
 					<xsl:when test="normalize-space(*[local-name() = 'title']/*[local-name() = 'tab'][1]/preceding-sibling::node()) != ''">
 						<!-- presentation xml data -->
 						<xsl:value-of select="*[local-name() = 'title']/*[local-name() = 'tab'][1]/preceding-sibling::node()"/>
+					</xsl:when>
+					<xsl:when test="local-name() = 'term' and normalize-space(*[local-name() = 'name']) != '' and  normalize-space(translate(*[local-name() = 'name'], '0123456789.', '')) = ''">
+						<xsl:value-of select="*[local-name() = 'name']"/>
 					</xsl:when>
 					<xsl:when test="$section_ = '0' and not(@type='intro')"></xsl:when>
 					<xsl:otherwise>
@@ -300,7 +306,17 @@
 	<xsl:template match="*[local-name() = 'bibliography']"/>
 	
 	<xsl:template match="*[local-name() = 'bibdata']" mode="front">
-		<iso-meta>
+		<xsl:variable name="element_name">
+			<xsl:choose>
+				<xsl:when test="$organization = 'BSI'">nat-meta</xsl:when>
+				<xsl:otherwise>iso-meta</xsl:otherwise>
+			</xsl:choose>
+		</xsl:variable>
+		<!-- <iso-meta> -->
+		<xsl:element name="{$element_name}">
+			<xsl:if test="$organization = 'BSI'">
+				<xsl:attribute name="originator">BSI</xsl:attribute>
+			</xsl:if>
 			<xsl:for-each select="*[local-name() = 'title'][generate-id(.)=generate-id(key('klang',@language)[1])]">
 				<title-wrap xml:lang="{@language}">
 				
@@ -504,7 +520,8 @@
 				<xsl:apply-templates select="xalan:nodeset($front_check)" mode="display_check"/>
 				<xsl:text>&#xa;===================================&#xa;</xsl:text>
 			</xsl:if>
-		</iso-meta>
+		<!-- </iso-meta> -->
+		</xsl:element>
 	</xsl:template>
 	
 	<xsl:template match="@*|node()" mode="display_check">
