@@ -22,7 +22,8 @@
 	<xsl:variable name="lower">abcdefghijklmnopqrstuvwxyz</xsl:variable> 
 	<xsl:variable name="upper">ABCDEFGHIJKLMNOPQRSTUVWXYZ</xsl:variable>
 	
-	<xsl:variable name="organization" select="/*/*[local-name() = 'bibdata']/*[local-name() = 'copyright']/*[local-name() = 'owner']/*[local-name() = 'organization']/*[local-name() = 'abbreviation']"/>
+	<xsl:variable name="organization_abbreviation" select="/*/*[local-name() = 'bibdata']/*[local-name() = 'copyright']/*[local-name() = 'owner']/*[local-name() = 'organization']/*[local-name() = 'abbreviation']"/>
+	<xsl:variable name="organization_name" select="/*/*[local-name() = 'bibdata']/*[local-name() = 'copyright']/*[local-name() = 'owner']/*[local-name() = 'organization']/*[local-name() = 'name']"/>
 	
 	<!-- ====================================================================== -->
 	<!-- ====================================================================== -->
@@ -130,7 +131,7 @@
 			
 			<xsl:variable name="id">
 				<xsl:choose>
-					<xsl:when test="$organization = 'BSI' and @id"><xsl:value-of select="@id"/></xsl:when>
+					<xsl:when test="($organization_abbreviation = 'BSI' or $organization_name = 'The British Standards Institution') and @id"><xsl:value-of select="@id"/></xsl:when>
 					<xsl:when test="$change_id = 'false'"><xsl:value-of select="$source_id"/></xsl:when>
 					<xsl:when test="$name = 'li'"><xsl:value-of select="$source_id"/></xsl:when>
 					<xsl:otherwise>
@@ -243,7 +244,7 @@
 			<xsl:if test="*[local-name() = 'sections'] or *[local-name() = 'bibliography']/*[local-name() = 'references'][@normative='true']">
 				<body>
 				
-					<xsl:if test="$organization = 'BSI'">
+					<xsl:if test="($organization_abbreviation = 'BSI' or $organization_name = 'The British Standards Institution')">
 						<xsl:apply-templates select="*[local-name() = 'preface']/*[local-name() = 'introduction']" mode="front_preface"> <!-- [0] -->
 							<xsl:with-param name="skipIntroduction">false</xsl:with-param>
 						</xsl:apply-templates>
@@ -312,13 +313,13 @@
 	<xsl:template match="*[local-name() = 'bibdata']" mode="front">
 		<xsl:variable name="element_name">
 			<xsl:choose>
-				<xsl:when test="$organization = 'BSI'">nat-meta</xsl:when>
+				<xsl:when test="($organization_abbreviation = 'BSI' or $organization_name = 'The British Standards Institution')">nat-meta</xsl:when>
 				<xsl:otherwise>iso-meta</xsl:otherwise>
 			</xsl:choose>
 		</xsl:variable>
 		<!-- <iso-meta> -->
 		<xsl:element name="{$element_name}">
-			<xsl:if test="$organization = 'BSI'">
+			<xsl:if test="($organization_abbreviation = 'BSI' or $organization_name = 'The British Standards Institution')">
 				<xsl:attribute name="originator">BSI</xsl:attribute>
 			</xsl:if>
 			<xsl:for-each select="*[local-name() = 'title'][generate-id(.)=generate-id(key('klang',@language)[1])]">
@@ -415,7 +416,9 @@
 				</doc-number>
 				
 				<!-- <part-number> -->
+				<part-number>
 				<xsl:apply-templates select="*[local-name() = 'ext']/*[local-name() = 'structuredidentifier']/*[local-name() = 'partnumber']" mode="front"/>
+				</part-number>
 				
 				<edition>
 					<xsl:apply-templates select="*[local-name() = 'edition']" mode="front"/>
@@ -499,7 +502,15 @@
 					<xsl:apply-templates select="*[local-name() = 'copyright']/*[local-name() = 'from']" mode="front"/>
 				</copyright-year>
 				<copyright-holder>
-					<xsl:apply-templates select="*[local-name() = 'copyright']/*[local-name() = 'owner']/*[local-name() = 'organization']/*[local-name() = 'abbreviation']" mode="front"/>
+					<xsl:choose>
+						<xsl:when test="*[local-name() = 'copyright']/*[local-name() = 'owner']/*[local-name() = 'organization']/*[local-name() = 'abbreviation']">
+							<xsl:apply-templates select="*[local-name() = 'copyright']/*[local-name() = 'owner']/*[local-name() = 'organization']/*[local-name() = 'abbreviation']" mode="front"/>
+						</xsl:when>
+						<xsl:otherwise>
+							<xsl:apply-templates select="*[local-name() = 'copyright']/*[local-name() = 'owner']/*[local-name() = 'organization']/*[local-name() = 'name']" mode="front"/>
+						</xsl:otherwise>
+					</xsl:choose>
+					
 				</copyright-holder>
 				<xsl:apply-templates select="/*/*[local-name() = 'boilerplate']/*[local-name() = 'legal-statement']"/>
 				<xsl:apply-templates select="/*/*[local-name() = 'boilerplate']/*[local-name() = 'license-statement']"/>
@@ -589,12 +600,7 @@
 			</xsl:otherwise>
 		</xsl:choose>
 	</xsl:template>
-	
-	<xsl:template match="*[local-name() = 'ext']/*[local-name() = 'structuredidentifier']/*[local-name() = 'partnumber']" mode="front">
-		<part-number>
-			<xsl:apply-templates mode="front"/>
-		</part-number>
-	</xsl:template>
+
 	
 	<xsl:template match="*[local-name() = 'ext']/*[local-name() = 'ics']/*[local-name() = 'code']" mode="front">
 		<ics><xsl:apply-templates mode="front"/></ics>
@@ -779,7 +785,7 @@
 		<xsl:variable name="name" select="local-name()"/>
 		<xsl:choose>
 			<!-- For BSI, Introduction section placed in body -->
-			<xsl:when test="$skipIntroduction = 'true' and $name = 'introduction' and $organization = 'BSI'"></xsl:when>
+			<xsl:when test="$skipIntroduction = 'true' and $name = 'introduction' and ($organization_abbreviation = 'BSI' or $organization_name = 'The British Standards Institution')"></xsl:when>
 			<xsl:otherwise>
 				<xsl:variable name="sec_type">
 					<xsl:choose>
@@ -1345,7 +1351,7 @@
 					</xsl:choose>
 				</xsl:variable>
 				<xsl:choose>
-					<xsl:when test="$organization = 'BSI'">
+					<xsl:when test="($organization_abbreviation = 'BSI' or $organization_name = 'The British Standards Institution')">
 						<xsl:value-of select="translate($citeas, ' ', '&#xA0;')"/><!-- replace space to non-break space -->
 					</xsl:when>
 					<xsl:otherwise>
@@ -1433,7 +1439,7 @@
 				<xsl:otherwise>sec</xsl:otherwise>
 			</xsl:choose>
 		</xsl:variable>
-	
+		<!-- parent=<xsl:value-of select="$parent"/> -->
 		<xref > <!-- ref-type="{$ref_type}" rid="{$id}" --> <!-- replaced by xsl:attribute name=... for save ordering -->
       <xsl:attribute name="ref-type">
         <xsl:value-of select="$ref_type"/>
@@ -1633,7 +1639,8 @@
 				<xsl:apply-templates select="*[local-name() = 'tfoot']" mode="table"/>
 				<xsl:apply-templates select="*[local-name() = 'tbody']" mode="table"/>
 				<xsl:apply-templates />
-			</table>			
+			</table>
+			
 		<!-- </table-wrap> -->
     </xsl:element>
 		<!-- move notes outside table -->
