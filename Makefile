@@ -37,12 +37,12 @@ endif
 src/test/resources/iso-rice-en.cd.mn.xml: tests/mn-samples-iso/documents/international-standard/rice-en.cd.xml
 	cp $< $@
 
-tests/mn-samples-iso/documents/international-standard/rice-en.cd.xml:
-ifeq ($(OS),Windows_NT)
-	$(MAKE) -C tests/mn-samples-iso -f Makefile.win all SHELL=cmd
-else
-	$(MAKE) -C tests/mn-samples-iso all
-endif
+#tests/mn-samples-iso/documents/international-standard/rice-en.cd.xml:
+#ifeq ($(OS),Windows_NT)
+#	$(MAKE) -C tests/mn-samples-iso -f Makefile.win all SHELL=cmd
+#else
+#	$(MAKE) -C tests/mn-samples-iso all
+#endif
 
 documents/%.mn.xml: src/test/resources/%.mn.xml
 	cp $< $@
