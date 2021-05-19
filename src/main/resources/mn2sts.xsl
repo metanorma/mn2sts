@@ -202,7 +202,7 @@
 	<xsl:template name="getId">
 		<!-- <xsl:variable name="name" select="local-name()"/> -->
 		<xsl:choose>
-			<xsl:when test="@id"><xsl:value-of select="@id"/></xsl:when>
+			<xsl:when test="@id"><xsl:value-of select="translate(@id,'()', '__')"/></xsl:when> <!-- replace '(' and ')' for valid id -->
 			<xsl:otherwise>
 				<xsl:value-of select="generate-id(.)"/>
 			</xsl:otherwise>
