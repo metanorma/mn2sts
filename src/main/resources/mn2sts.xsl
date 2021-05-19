@@ -1085,13 +1085,13 @@
 
 	<xsl:template match="*[local-name() = 'term']">
 		<xsl:param name="sectionNum"/>
-		<!-- <xsl:variable name="current_id">
+		<xsl:variable name="current_id">
 			<xsl:call-template name="getId"/>
 		</xsl:variable>
-		<xsl:variable name="id" select="$elements//element[@source_id = $current_id]/@id"/>
-		<xsl:variable name="section" select="$elements//element[@source_id = $current_id]/@section"/>	 -->
+		<xsl:variable name="section" select="$elements//element[@source_id = $current_id]/@section"/>
+		<!-- <xsl:variable name="id" select="$elements//element[@source_id = $current_id]/@id"/> -->
 		
-		<xsl:variable name="id"><xsl:call-template name="getId"/></xsl:variable>
+		<!-- <xsl:variable name="id"><xsl:call-template name="getId"/></xsl:variable> -->
 		
 		<xsl:variable name="section">
 			<xsl:choose>
@@ -1099,12 +1099,13 @@
 					<xsl:value-of select="*[local-name() = 'name']"/>
 				</xsl:when>
 				<xsl:otherwise>
-					<xsl:value-of select="$sectionNum"/>
+					<xsl:value-of select="$elements//element[@source_id = $current_id]/@section"/>
+					<!-- <xsl:value-of select="$sectionNum"/> -->
 				</xsl:otherwise>
 			</xsl:choose>
 		</xsl:variable>
 
-		<term-sec id="{$id}">
+		<term-sec id="{$current_id}">
 			<label><xsl:value-of select="$section"/></label>
 			<tbx:termEntry id="term_{$section}">
 				<tbx:langSet xml:lang="en">
@@ -1213,6 +1214,17 @@
 		<tbx:tig id="{$id}">
 			<tbx:term><xsl:apply-templates /></tbx:term>
 			<tbx:partOfSpeech value="noun"/>
+			<xsl:variable name="element_name" select="local-name()"/>
+			<xsl:variable name="normativeAuthorization">
+				<xsl:choose>
+					<xsl:when test="$element_name = 'preferred'">preferredTerm</xsl:when>
+					<xsl:when test="$element_name = 'admitted'">admittedTerm</xsl:when>
+					<xsl:when test="$element_name = 'deprecates'">deprecatedTerm</xsl:when>
+				</xsl:choose>
+			</xsl:variable>
+			<xsl:if test="normalize-space($normativeAuthorization) != ''">
+				<tbx:normativeAuthorization value="{$normativeAuthorization}"/>
+			</xsl:if>
 		</tbx:tig>
 	</xsl:template>
 	
@@ -1247,6 +1259,8 @@
 			</xsl:otherwise>
 		</xsl:choose>
 	</xsl:template>
+	
+	<xsl:template match="*[local-name() = 'p']/@align"/>
 	
 	<xsl:template match="*[local-name() = 'p' or local-name() = 'ul' or local-name() = 'ol']/@id">
 		<xsl:variable name="p_id" select="."/>
@@ -1468,9 +1482,10 @@
 	<xsl:template match="*[local-name() = 'em'][following-sibling::*[1][local-name() = 'xref']]" priority="2">
 		<tbx:entailedTerm>
 			<xsl:variable name="target" select="following-sibling::*[1]/@target"/>					
-			<xsl:variable name="section" select="$elements//element[@source_id = $target]/@section"/>
+			<!-- <xsl:variable name="section" select="$elements//element[@source_id = $target]/@section"/> -->
 			<xsl:attribute name="target">
-				<xsl:text>term_</xsl:text><xsl:value-of select="$section"/>
+				<!-- <xsl:text>term_</xsl:text><xsl:value-of select="$section"/> -->
+				<xsl:text>term_</xsl:text><xsl:value-of select="$target"/>
 			</xsl:attribute>
 			<xsl:apply-templates />
 		</tbx:entailedTerm>
@@ -1491,7 +1506,12 @@
 	</xsl:template>
 	
 	
-	<xsl:template match="*[local-name() = 'th']/*[local-name() = 'br']">
+	<xsl:template match="*[local-name() = 'th'][*[local-name() = 'strong']][*[local-name() = 'br']]/node()[1][self::text()]">
+		<xsl:text disable-output-escaping="yes">&lt;bold&gt;</xsl:text>
+		<xsl:value-of select="."/>
+	</xsl:template>
+	
+	<xsl:template match="*[local-name() = 'th'][*[local-name() = 'strong']]/*[local-name() = 'br']">
 		<xsl:text disable-output-escaping="yes">&lt;/bold&gt;</xsl:text>
 		<break/>
 		<xsl:text disable-output-escaping="yes">&lt;bold&gt;</xsl:text>
@@ -1525,12 +1545,12 @@
       <xsl:attribute name="ref-type">
         <xsl:value-of select="$ref_type"/>
       </xsl:attribute>
-      <xsl:attribute name="rid">
-				<xsl:choose>
+      <xsl:attribute name="rid"><xsl:value-of select="@target"/></xsl:attribute>
+				<!-- <xsl:choose>
 					<xsl:when test="normalize-space($id) = ''"><xsl:value-of select="@target"/></xsl:when>
 					<xsl:otherwise><xsl:value-of select="$id"/></xsl:otherwise>
 				</xsl:choose>
-      </xsl:attribute>
+      </xsl:attribute> -->
       
       <xsl:variable name="text_">
         <xsl:value-of select="translate($section, '&#xA0;', ' ')"/>
@@ -1898,21 +1918,21 @@
 	</xsl:template>
 	
 	<xsl:template match="*[local-name() = 'stem']">
-		<xsl:if test="parent::*[local-name() = 'th']">
+		<xsl:if test="parent::*[local-name() = 'th'][*[local-name() = 'strong']]">
 			<xsl:text disable-output-escaping="yes">&lt;/bold&gt;</xsl:text>
 		</xsl:if>
 		<disp-formula>
 			<xsl:if test="parent::*[local-name() = 'formula']">
-				<!-- <xsl:variable name="current_id" select="../@id"/>		
-				<xsl:variable name="id" select="$elements//element[@source_id = $current_id]/@id"/> -->
-				<xsl:variable name="id"><xsl:call-template name="getId"/></xsl:variable>
+				<xsl:variable name="current_id" select="../@id"/>		
+				<!-- <xsl:variable name="id" select="$elements//element[@source_id = $current_id]/@id"/> -->
+				<xsl:variable name="id"><xsl:value-of select="$current_id"/></xsl:variable><!-- <xsl:call-template name="getId"/> -->
 				<xsl:attribute name="id">
 					<xsl:value-of select="$id"/>
 				</xsl:attribute>
 			</xsl:if>
 			<xsl:apply-templates />
 		</disp-formula>
-		<xsl:if test="parent::*[local-name() = 'th']">
+		<xsl:if test="parent::*[local-name() = 'th'][*[local-name() = 'strong']]">
 			<xsl:text disable-output-escaping="yes">&lt;bold&gt;</xsl:text>
 		</xsl:if>
 	</xsl:template>
