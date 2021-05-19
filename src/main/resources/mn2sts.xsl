@@ -18,16 +18,21 @@
 	<xsl:variable name="format" select="normalize-space($outputformat)"/>
 	
 	<xsl:variable name="change_id">true</xsl:variable>
-	
-	<xsl:variable name="lower">abcdefghijklmnopqrstuvwxyz</xsl:variable> 
-	<xsl:variable name="upper">ABCDEFGHIJKLMNOPQRSTUVWXYZ</xsl:variable>
-	
+		
 	<xsl:variable name="organization_abbreviation" select="/*/*[local-name() = 'bibdata']/*[local-name() = 'copyright']/*[local-name() = 'owner']/*[local-name() = 'organization']/*[local-name() = 'abbreviation']"/>
 	<xsl:variable name="organization_name" select="/*/*[local-name() = 'bibdata']/*[local-name() = 'copyright']/*[local-name() = 'owner']/*[local-name() = 'organization']/*[local-name() = 'name']"/>
 	
+	<xsl:variable name="organization">
+		<xsl:choose>
+			<xsl:when test="$organization_abbreviation = 'BSI' or $organization_name = 'The British Standards Institution'">BSI</xsl:when>
+			<xsl:when test="$organization_abbreviation != ''"><xsl:value-of select="$organization_abbreviation"/></xsl:when>
+			<xsl:when test="$organization_name != ''"><xsl:value-of select="$organization_name"/></xsl:when>
+		</xsl:choose>
+	</xsl:variable>
+	
 	<!-- ====================================================================== -->
 	<!-- ====================================================================== -->
-	<xsl:variable name="elements">
+	<xsl:variable name="elements_">
 		<elements>
 			<xsl:apply-templates select="/*/*[local-name() = 'preface']/node()" mode="elements"/>
       
@@ -129,9 +134,9 @@
 				<xsl:call-template name="getId"/>
 			</xsl:variable>
 			
-			<xsl:variable name="id">
-				<xsl:choose>
-					<xsl:when test="($organization_abbreviation = 'BSI' or $organization_name = 'The British Standards Institution') and @id"><xsl:value-of select="@id"/></xsl:when>
+			<xsl:variable name="id" select="$source_id"/>
+				<!--<xsl:choose>
+					<xsl:when test="$organization = 'BSI' and @id"><xsl:value-of select="@id"/></xsl:when>
 					<xsl:when test="$change_id = 'false'"><xsl:value-of select="$source_id"/></xsl:when>
 					<xsl:when test="$name = 'li'"><xsl:value-of select="$source_id"/></xsl:when>
 					<xsl:otherwise>
@@ -156,7 +161,7 @@
 						<xsl:value-of select="$section_"/>
 					</xsl:otherwise>
 				</xsl:choose>
-			</xsl:variable>
+			</xsl:variable>-->
 			
 			<xsl:variable name="section">
 				<xsl:choose>
@@ -168,8 +173,8 @@
 						<xsl:value-of select="*[local-name() = 'name']"/>
 					</xsl:when>
 					<xsl:when test="local-name() = 'figure' and contains(*[local-name() = 'name'], '&#8212; ')">
-						<xsl:variable name="name" select="substring-before(*[local-name() = 'name'], '&#8212; ')"/>
-						<xsl:value-of select="translate(normalize-space(translate($name, '&#xa0;', ' ')), ' ', '&#xa0;')"/>
+						<xsl:variable name="figure_name" select="substring-before(*[local-name() = 'name'], '&#8212; ')"/>
+						<xsl:value-of select="translate(normalize-space(translate($figure_name, '&#xa0;', ' ')), ' ', '&#xa0;')"/>
 					</xsl:when>
 					<xsl:when test="$section_ = '0' and not(@type='intro')"></xsl:when>
 					<xsl:otherwise>
@@ -195,7 +200,7 @@
 	</xsl:template>
 		
 	<xsl:template name="getId">
-		<xsl:variable name="name" select="local-name()"/>
+		<!-- <xsl:variable name="name" select="local-name()"/> -->
 		<xsl:choose>
 			<xsl:when test="@id"><xsl:value-of select="@id"/></xsl:when>
 			<xsl:otherwise>
@@ -203,7 +208,8 @@
 			</xsl:otherwise>
 		</xsl:choose>
 	</xsl:template>
-		
+	
+	<xsl:variable name="elements" select="xalan:nodeset($elements_)"/>
 	<!-- ====================================================================== -->
 	<!-- ====================================================================== -->
 	
@@ -244,7 +250,7 @@
 			<xsl:if test="*[local-name() = 'sections'] or *[local-name() = 'bibliography']/*[local-name() = 'references'][@normative='true']">
 				<body>
 				
-					<xsl:if test="($organization_abbreviation = 'BSI' or $organization_name = 'The British Standards Institution')">
+					<xsl:if test="$organization = 'BSI'">
 						<xsl:apply-templates select="*[local-name() = 'preface']/*[local-name() = 'introduction']" mode="front_preface"> <!-- [0] -->
 							<xsl:with-param name="skipIntroduction">false</xsl:with-param>
 						</xsl:apply-templates>
@@ -298,8 +304,10 @@
 				</back>
 			</xsl:if>
 			<xsl:if test="$debug = 'true'">
+				<xsl:value-of select="count($elements//element)"/>
 				<xsl:text disable-output-escaping="yes">&lt;!-- </xsl:text>
-				<xsl:copy-of select="xalan:nodeset($elements)"/>
+				<!-- <xsl:copy-of select="xalan:nodeset($elements)"/> -->
+				<xsl:copy-of select="$elements"/>
 				<xsl:text disable-output-escaping="yes">--&gt;</xsl:text>
 			</xsl:if>
 		</standard>
@@ -313,13 +321,13 @@
 	<xsl:template match="*[local-name() = 'bibdata']" mode="front">
 		<xsl:variable name="element_name">
 			<xsl:choose>
-				<xsl:when test="($organization_abbreviation = 'BSI' or $organization_name = 'The British Standards Institution')">nat-meta</xsl:when>
+				<xsl:when test="$organization = 'BSI'">nat-meta</xsl:when>
 				<xsl:otherwise>iso-meta</xsl:otherwise>
 			</xsl:choose>
 		</xsl:variable>
 		<!-- <iso-meta> -->
 		<xsl:element name="{$element_name}">
-			<xsl:if test="($organization_abbreviation = 'BSI' or $organization_name = 'The British Standards Institution')">
+			<xsl:if test="$organization = 'BSI'">
 				<xsl:attribute name="originator">BSI</xsl:attribute>
 			</xsl:if>
 			<xsl:for-each select="*[local-name() = 'title'][generate-id(.)=generate-id(key('klang',@language)[1])]">
@@ -411,6 +419,9 @@
 				<doc-type>
 					<xsl:apply-templates select="*[local-name() = 'ext']/*[local-name() = 'doctype']" mode="front"/>
 				</doc-type>
+				
+				<xsl:apply-templates select="*[local-name() = 'ext']/*[local-name() = 'subdoctype']" mode="front"/>
+				
 				<doc-number>					
 					<xsl:apply-templates select="*[local-name() = 'docnumber']" mode="front"/>
 				</doc-number>
@@ -606,6 +617,12 @@
 		<ics><xsl:apply-templates mode="front"/></ics>
 	</xsl:template>
 
+	<xsl:template match="*[local-name() = 'ext']/*[local-name() = 'subdoctype']" mode="front">
+		<xsl:text disable-output-escaping="yes">&lt;!--</xsl:text>
+			<xsl:copy-of select="."/>
+		<xsl:text disable-output-escaping="yes">--&gt;</xsl:text>
+	</xsl:template>
+	
 	<xsl:template match="*[local-name() = 'bibdata']/*[local-name() = 'relation']" mode="front">
 		<!--
 		<relation xmlns="https://www.metanorma.org/ns/iso" type="informativelyReferences">
@@ -660,6 +677,7 @@
 																*[local-name() = 'status']/*[local-name() = 'stage'] |
 																*[local-name() = 'status']/*[local-name() = 'substage'] |
 																*[local-name() = 'ext']/*[local-name() = 'doctype'] |
+																*[local-name() = 'ext']/*[local-name() = 'subdoctype'] |
 																*[local-name() = 'ext']/*[local-name() = 'updates-document-type'] |
 																*[local-name() = 'docnumber'] |
 																*[local-name() = 'ext']/*[local-name() = 'structuredidentifier']/*[local-name() = 'partnumber'] |
@@ -785,7 +803,7 @@
 		<xsl:variable name="name" select="local-name()"/>
 		<xsl:choose>
 			<!-- For BSI, Introduction section placed in body -->
-			<xsl:when test="$skipIntroduction = 'true' and $name = 'introduction' and ($organization_abbreviation = 'BSI' or $organization_name = 'The British Standards Institution')"></xsl:when>
+			<xsl:when test="$skipIntroduction = 'true' and $name = 'introduction' and $organization = 'BSI'"></xsl:when>
 			<xsl:otherwise>
 				<xsl:variable name="sec_type">
 					<xsl:choose>
@@ -805,9 +823,10 @@
 		<xsl:variable name="current_id">
 			<xsl:call-template name="getId"/>
 		</xsl:variable>
-		<xsl:variable name="id" select="xalan:nodeset($elements)//element[@source_id = $current_id]/@id"/>
-		<xsl:variable name="section" select="xalan:nodeset($elements)//element[@source_id = $current_id]/@section"/>
-		<app content-type="inform-annex" id="{$id}">
+		<!-- <xsl:variable name="id" select="xalan:nodeset($elements)//element[@source_id = $current_id]/@id"/> -->
+		<xsl:variable name="id"><xsl:call-template name="getId"/></xsl:variable>
+		<xsl:variable name="section" select="$elements//element[@source_id = $current_id]/@section"/>
+		<app id="{$id}" content-type="inform-annex">
 			<xsl:attribute name="content-type">
 				<xsl:choose>
 					<xsl:when test="@obligation   = 'informative'">inform-annex</xsl:when>
@@ -859,24 +878,29 @@
 	</xsl:template>
 	<xsl:template match="*[local-name() = 'bibitem'][position() &gt; 1][ancestor::*[local-name() = 'references'][@normative='true']]" priority="2"/>
 	
+	<xsl:variable name="count_non_normative_references" select="count(//*[local-name() = 'references'][not(@normative='true')])"/>
 	<xsl:template match="*[local-name() = 'bibitem']" name="bibitem">
 		<xsl:variable name="current_id">
 			<xsl:call-template name="getId"/>
 		</xsl:variable>
-		<xsl:variable name="id" select="xalan:nodeset($elements)//element[@source_id = $current_id]/@id"/>
-		
+		<!-- <xsl:variable name="id" select="$elements//element[@source_id = $current_id]/@id"/> -->
+		<xsl:variable name="id"><xsl:call-template name="getId"/></xsl:variable>
 		<ref>
 			<xsl:if test="normalize-space(@type) != ''">
 				<xsl:attribute name="content-type">
 					<xsl:value-of select="@type"/>
 				</xsl:attribute>
 			</xsl:if>
+			
 			<xsl:attribute name="id"><xsl:value-of select="$id"/>
-				<xsl:if test="count(//*[local-name() = 'references'][not(@normative='true')]) &gt; 1">
+				<xsl:if test="$count_non_normative_references &gt; 1">
 					<xsl:number format="_1" count="*[local-name() = 'references'][not(@normative='true')]"/>
 				</xsl:if>
 			</xsl:attribute>
-			<!-- <label><xsl:number format="[1]"/></label> --> <!-- see docidentifier @type="metanorma" -->
+			
+			<xsl:if test="not(*[local-name() = 'docidentifier'][@type='metanorma'])">
+				<label><xsl:number format="[1]"/></label> <!-- see docidentifier @type="metanorma" -->
+			</xsl:if>
 			
 			<xsl:choose>
 				<xsl:when test="count(*) = 2 and *[local-name() = 'docidentifier'][@type='metanorma'] and *[local-name() = 'title']">
@@ -997,6 +1021,9 @@
 																*[local-name() = 'definitions']">
 		<xsl:param name="sectionNum"/>
 		<xsl:param name="sectionNumSkew" select="0"/>
+		<xsl:if test="$debug = 'true'">
+			<xsl:message>DEBUG: clause processing <xsl:number level="any" count="*[local-name() = 'clause']"/></xsl:message>
+		</xsl:if>
 		<xsl:variable name="sectionNum_">
 			<xsl:choose>
 				<xsl:when test="$sectionNum"><xsl:value-of select="$sectionNum"/></xsl:when>
@@ -1025,17 +1052,18 @@
 			<xsl:call-template name="getId"/>
 		</xsl:variable>
 		
-		<xsl:variable name="id">
+		<!-- <xsl:variable name="id">
 			<xsl:choose>
 				<xsl:when test="ancestor::*[local-name() = 'foreword']">
 					<xsl:value-of select="@id"/>
 				</xsl:when>
 				<xsl:otherwise>
-					<xsl:value-of select="xalan:nodeset($elements)//element[@source_id = $current_id]/@id"/>
+					<xsl:value-of select="$elements//element[@source_id = $current_id]/@id"/>
 				</xsl:otherwise>
 			</xsl:choose>
-		</xsl:variable>
-		<xsl:variable name="section" select="xalan:nodeset($elements)//element[@source_id = $current_id]/@section"/>	
+		</xsl:variable> -->
+		<xsl:variable name="id"><xsl:call-template name="getId"/></xsl:variable>
+		<xsl:variable name="section" select="$elements//element[@source_id = $current_id]/@section"/>
 		
 		<sec id="{$id}">
 			<xsl:if test="normalize-space($sec_type) != ''">
@@ -1057,29 +1085,44 @@
 
 	<xsl:template match="*[local-name() = 'term']">
 		<xsl:param name="sectionNum"/>
-		<xsl:variable name="current_id">
+		<!-- <xsl:variable name="current_id">
 			<xsl:call-template name="getId"/>
 		</xsl:variable>
-		<xsl:variable name="id" select="xalan:nodeset($elements)//element[@source_id = $current_id]/@id"/>	
-		<xsl:variable name="section" select="xalan:nodeset($elements)//element[@source_id = $current_id]/@section"/>			
+		<xsl:variable name="id" select="$elements//element[@source_id = $current_id]/@id"/>
+		<xsl:variable name="section" select="$elements//element[@source_id = $current_id]/@section"/>	 -->
+		
+		<xsl:variable name="id"><xsl:call-template name="getId"/></xsl:variable>
+		
+		<xsl:variable name="section">
+			<xsl:choose>
+				<xsl:when test="normalize-space(*[local-name() = 'name']) != '' and  normalize-space(translate(*[local-name() = 'name'], '0123456789.', '')) = ''">
+					<xsl:value-of select="*[local-name() = 'name']"/>
+				</xsl:when>
+				<xsl:otherwise>
+					<xsl:value-of select="$sectionNum"/>
+				</xsl:otherwise>
+			</xsl:choose>
+		</xsl:variable>
+
 		<term-sec id="{$id}">
 			<label><xsl:value-of select="$section"/></label>
 			<tbx:termEntry id="term_{$section}">
 				<tbx:langSet xml:lang="en">
-					<xsl:apply-templates>
+					<xsl:apply-templates select="node()[not(local-name() = 'termexample' or local-name() = 'termnote' or local-name() = 'termsource' or 
+																										local-name() = 'preferred' or local-name() = 'admitted' or local-name() = 'deprecates' or local-name() = 'domain')]">
 						<xsl:with-param name="sectionNum" select="$sectionNum"/>
 					</xsl:apply-templates>
-					<xsl:apply-templates select="*[local-name() = 'termexample']" mode="termEntry">
+					<xsl:apply-templates select="*[local-name() = 'termexample']"><!--  mode="termEntry"> -->
 						<xsl:with-param name="sectionNum" select="$sectionNum"/>
 					</xsl:apply-templates>
-					<xsl:apply-templates select="*[local-name() = 'termnote']" mode="termEntry">
+					<xsl:apply-templates select="*[local-name() = 'termnote']"> <!--  mode="termEntry" -->
 						<xsl:with-param name="sectionNum" select="$sectionNum"/>
 					</xsl:apply-templates>
-					<xsl:apply-templates select="*[local-name() = 'termsource']" mode="termEntry">
+					<xsl:apply-templates select="*[local-name() = 'termsource']"> <!--  mode="termEntry" -->
 						<xsl:with-param name="sectionNum" select="$sectionNum"/>
 					</xsl:apply-templates>
 					
-					<xsl:apply-templates select="*[local-name() = 'preferred'] | *[local-name() = 'admitted'] | *[local-name() = 'deprecates'] | *[local-name() = 'domain']" mode="termEntry">
+					<xsl:apply-templates select="*[local-name() = 'preferred'] | *[local-name() = 'admitted'] | *[local-name() = 'deprecates'] | *[local-name() = 'domain']"> <!--  mode="termEntry" -->
 						<xsl:with-param name="sectionNum" select="$sectionNum"/>
 					</xsl:apply-templates>
 					
@@ -1088,13 +1131,17 @@
 		</term-sec>
 	</xsl:template>	
 
+	<xsl:template match="*[local-name() = 'term']/text()">
+		<xsl:value-of select="normalize-space()"/>
+	</xsl:template>
+
 	<xsl:template match="*[local-name() = 'definition']">
 		<tbx:definition>
 			<xsl:apply-templates />
 		</tbx:definition>
 	</xsl:template>
 
-	<xsl:template match="*[local-name() = 'termexample']" mode="termEntry">
+	<xsl:template match="*[local-name() = 'termexample']"> <!--  mode="termEntry" -->
 		<tbx:example>
 			<xsl:apply-templates />
 		</tbx:example>
@@ -1110,13 +1157,16 @@
 		<xsl:value-of select="normalize-space()"/>
 	</xsl:template>
 	
-	<xsl:template match="*[local-name() = 'termnote']" mode="termEntry">
+	<xsl:template match="*[local-name() = 'termnote']"> <!--  mode="termEntry" -->
 		<tbx:note>
 			<xsl:apply-templates />
 		</tbx:note>
 	</xsl:template>
 	
-	<xsl:template match="*[local-name() = 'termsource']" mode="termEntry">		
+	<xsl:template match="*[local-name() = 'termsource']"> <!--  mode="termEntry" -->
+		<!-- <xsl:if test="$debug = 'true'">
+			<xsl:message>DEBUG: termsource processing <xsl:value-of select="parent::*/*[local-name() = 'name']"/></xsl:message>
+		</xsl:if> -->
 		<tbx:source>
 			<xsl:value-of select="*[local-name() = 'origin']/@citeas"/>
 			<xsl:apply-templates select="*[local-name() = 'origin']/*[local-name() = 'localityStack']"/>
@@ -1147,17 +1197,18 @@
 	</xsl:template>
 	
 	
-	<xsl:template match="*[local-name() = 'termexample'] | *[local-name() = 'termnote'] | *[local-name() = 'termsource']"/>
+	<!-- <xsl:template match="*[local-name() = 'termexample'] | *[local-name() = 'termnote'] | *[local-name() = 'termsource']"/> -->
 	
-	<xsl:template match="*[local-name() = 'preferred'] | *[local-name() = 'admitted'] | *[local-name() = 'deprecates'] | *[local-name() = 'domain']"/>
-	<xsl:template match="*[local-name() = 'preferred'] | *[local-name() = 'admitted'] | *[local-name() = 'deprecates'] | *[local-name() = 'domain']" mode="termEntry">
+	<!-- <xsl:template match="*[local-name() = 'preferred'] | *[local-name() = 'admitted'] | *[local-name() = 'deprecates'] | *[local-name() = 'domain']"/> -->
+	<xsl:template match="*[local-name() = 'preferred'] | *[local-name() = 'admitted'] | *[local-name() = 'deprecates'] | *[local-name() = 'domain']"> <!--  mode="termEntry" -->
 		<xsl:param name="sectionNum"/>
 		
-		<xsl:variable name="current_id">
+		<!-- <xsl:variable name="current_id">
 			<xsl:call-template name="getId"/>
 		</xsl:variable>
 		
-		<xsl:variable name="id" select="xalan:nodeset($elements)//element[@source_id = $current_id]/@id"/>	
+		<xsl:variable name="id" select="$elements//element[@source_id = $current_id]/@id"/>	 -->
+		<xsl:variable name="id"><xsl:call-template name="getId"/></xsl:variable>
 		
 		<tbx:tig id="{$id}">
 			<tbx:term><xsl:apply-templates /></tbx:term>
@@ -1166,17 +1217,30 @@
 	</xsl:template>
 	
 	<xsl:template match="*[local-name() = 'p']" name="p">
+		<!-- <xsl:if test="$debug = 'true'">
+			<xsl:message>DEBUG: p processing <xsl:number level="any" count="*[local-name() = 'p']"/></xsl:message>
+		</xsl:if> -->
+		<xsl:variable name="parent_name" select="local-name(..)"/>
 		<xsl:choose>
-			<xsl:when test="parent::*[local-name() = 'termexample'] or 
+			<!-- <xsl:when test="parent::*[local-name() = 'termexample'] or 
 														parent::*[local-name() = 'definition']  or 
 														parent::*[local-name() = 'termnote'] or 
 														parent::*[local-name() = 'modification'] or
 														parent::*[local-name() = 'dd']">
 				<xsl:apply-templates />
+			</xsl:when> -->
+			<xsl:when test="$parent_name = 'termexample' or 
+														$parent_name = 'definition'  or 
+														$parent_name = 'termnote' or 
+														$parent_name = 'modification' or
+														$parent_name = 'dd'">
+				<xsl:apply-templates />
 			</xsl:when>
 			<xsl:otherwise>
 				<p>
-					<!-- <xsl:copy-of select="@id"/> -->
+					<xsl:if test="$organization != 'BSI'">
+						<xsl:copy-of select="@id"/>
+					</xsl:if>
 					<xsl:apply-templates select="@*"/>
 					<xsl:apply-templates />
 				</p>
@@ -1187,7 +1251,7 @@
 	<xsl:template match="*[local-name() = 'p' or local-name() = 'ul' or local-name() = 'ol']/@id">
 		<xsl:variable name="p_id" select="."/>
 		<xsl:choose>
-			<xsl:when test="starts-with($p_id, '_') and not(//*[@target = $p_id])"></xsl:when> <!-- remove @id -->
+			<xsl:when test="$organization = 'BSI' and starts-with($p_id, '_') and not(//*[@target = $p_id])"></xsl:when> <!-- remove @id -->
 			<xsl:otherwise>
 				<xsl:attribute name="id"><xsl:value-of select="."/></xsl:attribute>
 			</xsl:otherwise>
@@ -1312,6 +1376,9 @@
 	
 	
 	<xsl:template match="*[local-name() = 'note']" name="note">
+		<!-- <xsl:if test="$debug = 'true'">
+			<xsl:message>DEBUG: note processing <xsl:number level="any" count="*[local-name() = 'note']"/></xsl:message>
+		</xsl:if> -->
 		<xsl:variable name="clause_id" select="ancestor::*[local-name() = 'clause'][1]/@id"/>		
 		<non-normative-note>
 			<label>
@@ -1327,10 +1394,22 @@
 		</non-normative-note>
 	</xsl:template>
 	
+	
+	<xsl:variable name="bibitems_URN_">
+		<xsl:for-each select="//*[local-name() = 'bibitem'][*[local-name() = 'docidentifier'][@type = 'URN']]">
+			<bibitem>
+				<xsl:copy-of select="@id"/>
+				<urn><xsl:value-of select="*[local-name() = 'docidentifier'][@type = 'URN']"/></urn>
+			</bibitem>
+		</xsl:for-each>
+	</xsl:variable>
+	<xsl:variable name="bibitems_URN" select="xalan:nodeset($bibitems_URN_)"/>
+		
 	<xsl:template match="*[local-name() = 'eref']">
 		<std>
 			<xsl:variable name="reference" select="@bibitemid"/>
-			<xsl:variable name="docidentifier_URN" select="//*[local-name() = 'bibitem'][@id = $reference]/*[local-name() = 'docidentifier'][@type = 'URN']"/>
+			<!-- <xsl:variable name="docidentifier_URN" select="//*[local-name() = 'bibitem'][@id = $reference]/*[local-name() = 'docidentifier'][@type = 'URN']"/> -->
+			<xsl:variable name="docidentifier_URN" select="$bibitems_URN/bibitem[@id = $reference]/urn"/>
 			<xsl:if test="$docidentifier_URN != ''">
 				<xsl:attribute name="std-id">
 					<xsl:value-of select="$docidentifier_URN"/>
@@ -1351,7 +1430,7 @@
 					</xsl:choose>
 				</xsl:variable>
 				<xsl:choose>
-					<xsl:when test="($organization_abbreviation = 'BSI' or $organization_name = 'The British Standards Institution')">
+					<xsl:when test="$organization = 'BSI'">
 						<xsl:value-of select="translate($citeas, ' ', '&#xA0;')"/><!-- replace space to non-break space -->
 					</xsl:when>
 					<xsl:otherwise>
@@ -1389,7 +1468,7 @@
 	<xsl:template match="*[local-name() = 'em'][following-sibling::*[1][local-name() = 'xref']]" priority="2">
 		<tbx:entailedTerm>
 			<xsl:variable name="target" select="following-sibling::*[1]/@target"/>					
-			<xsl:variable name="section" select="xalan:nodeset($elements)//element[@source_id = $target]/@section"/>
+			<xsl:variable name="section" select="$elements//element[@source_id = $target]/@section"/>
 			<xsl:attribute name="target">
 				<xsl:text>term_</xsl:text><xsl:value-of select="$section"/>
 			</xsl:attribute>
@@ -1400,7 +1479,7 @@
 
 	<!-- for xref, when previous is em -->
 	<xsl:template match="*[local-name() = 'xref'][preceding-sibling::*[1][local-name() = 'em']]" priority="2">
-		<xsl:value-of select="xalan:nodeset($elements)//element[@source_id = current()/@target]/@section"/>	
+		<xsl:value-of select="$elements//element[@source_id = current()/@target]/@section"/>	
 	</xsl:template>
 	
 	<xsl:template match="*[local-name() = 'em']">
@@ -1427,9 +1506,11 @@
 	</xsl:template>
 	
 	<xsl:template match="*[local-name() = 'xref']">
-		<xsl:variable name="section" select="xalan:nodeset($elements)//element[@source_id = current()/@target]/@section"/>
-		<xsl:variable name="id" select="xalan:nodeset($elements)//element[@source_id = current()/@target]/@id"/>
-		<xsl:variable name="parent" select="xalan:nodeset($elements)//element[@source_id = current()/@target]/@parent"/>
+		<xsl:variable name="section" select="$elements//element[@source_id = current()/@target]/@section"/>
+		<!-- <xsl:variable name="id" select="$elements//element[@source_id = current()/@target]/@id"/> -->
+		<xsl:variable name="id"><xsl:call-template name="getId"/></xsl:variable>
+		
+		<xsl:variable name="parent" select="$elements//element[@source_id = current()/@target]/@parent"/>
 		<xsl:variable name="ref_type">
 			<xsl:choose>
         <xsl:when test="$parent = 'figure'">fig</xsl:when>
@@ -1445,11 +1526,11 @@
         <xsl:value-of select="$ref_type"/>
       </xsl:attribute>
       <xsl:attribute name="rid">
-        <xsl:value-of select="$id"/>
+				<xsl:choose>
+					<xsl:when test="normalize-space($id) = ''"><xsl:value-of select="@target"/></xsl:when>
+					<xsl:otherwise><xsl:value-of select="$id"/></xsl:otherwise>
+				</xsl:choose>
       </xsl:attribute>
-			<xsl:if test="normalize-space($id) = ''">
-				<xsl:attribute name="rid"><xsl:value-of select="@target"/></xsl:attribute>
-			</xsl:if>
       
       <xsl:variable name="text_">
         <xsl:value-of select="translate($section, '&#xA0;', ' ')"/>
@@ -1457,7 +1538,7 @@
       <xsl:variable name="text">
         <xsl:value-of select="normalize-space($text_)"/>
         <xsl:if test="normalize-space($text_) = ''"><!-- in case of term -->
-          <xsl:value-of select="xalan:nodeset($elements)//element[@id = current()/@target]/@section"/>
+          <xsl:value-of select="$elements//element[@id = current()/@target]/@section"/>
         </xsl:if>
       </xsl:variable>
       <!-- <xsl:choose>
@@ -1507,7 +1588,7 @@
 	<!-- https://github.com/metanorma/mn2sts/issues/8 -->
 	<xsl:template match="*[local-name() = 'admonition']">
 		<non-normative-note id="{@id}">
-			<label><xsl:value-of select="translate(@type, $lower, $upper)"/></label>
+			<label><xsl:value-of select="java:toUpperCase(java:java.lang.String.new(@type))"/></label>
 			<xsl:apply-templates />
 		</non-normative-note>
 	</xsl:template>
@@ -1560,7 +1641,7 @@
 	<xsl:template match="*[local-name() = 'appendix']">
 		<sec id="{@id}" sec-type="appendix">
 			<xsl:variable name="current_id" select="@id"/>
-			<xsl:variable name="section" select="xalan:nodeset($elements)//element[@source_id = $current_id]/@section"/>
+			<xsl:variable name="section" select="$elements//element[@source_id = $current_id]/@section"/>
 			<xsl:if test="$section != ''">
 				<label><xsl:value-of select="$section"/></label>
 			</xsl:if>
@@ -1593,9 +1674,9 @@
 		<xsl:variable name="current_id">
 			<xsl:call-template name="getId"/>
 		</xsl:variable>
-		<xsl:variable name="id" select="xalan:nodeset($elements)//element[@source_id = $current_id]/@id"/>
-		<xsl:variable name="section" select="xalan:nodeset($elements)//element[@source_id = $current_id]/@section"/>
-    
+		<!-- <xsl:variable name="id" select="$elements//element[@source_id = $current_id]/@id"/> -->
+		<xsl:variable name="section" select="$elements//element[@source_id = $current_id]/@section"/>
+    <xsl:variable name="id"><xsl:call-template name="getId"/></xsl:variable>
     <xsl:variable name="wrap-element">
       <xsl:choose>
         <xsl:when test="ancestor::*[local-name() = 'figure']">array</xsl:when>
@@ -1608,7 +1689,6 @@
       <xsl:attribute name="id">
         <xsl:value-of select="$id"/>
       </xsl:attribute>
-			<xsl:copy-of select="@id"/>
 			<xsl:variable name="label">
 				<xsl:choose>
 					<xsl:when test="ancestor::*[local-name() = 'amend']/*[local-name() = 'autonumber'][@type = 'table']">
@@ -1681,10 +1761,11 @@
 	</xsl:template>
 	
 	<xsl:template match="*[local-name() = 'dl']">
-		<xsl:variable name="current_id">
+		<!-- <xsl:variable name="current_id">
 			<xsl:call-template name="getId"/>
 		</xsl:variable>
-		<xsl:variable name="id" select="xalan:nodeset($elements)//element[@source_id = $current_id]/@id"/>
+		<xsl:variable name="id" select="$elements//element[@source_id = $current_id]/@id"/> -->
+		<xsl:variable name="id"><xsl:call-template name="getId"/></xsl:variable>
 		<p>
 		<array id="{$id}">
 			<table>
@@ -1720,9 +1801,10 @@
 		<xsl:variable name="current_id">
 			<xsl:call-template name="getId"/>
 		</xsl:variable>
-		<xsl:variable name="id" select="xalan:nodeset($elements)//element[@source_id = $current_id]/@id"/>
-		<xsl:variable name="section" select="xalan:nodeset($elements)//element[@source_id = $current_id]/@section"/>
-		<fig-group content-type="figures" id="{$id}">
+		<!-- <xsl:variable name="id" select="$elements//element[@source_id = $current_id]/@id"/> -->
+		<xsl:variable name="id"><xsl:call-template name="getId"/></xsl:variable>
+		<xsl:variable name="section" select="$elements//element[@source_id = $current_id]/@section"/>
+		<fig-group id="{$id}" content-type="figures">
 			<label><xsl:value-of select="$section"/></label>
 			<xsl:apply-templates />
 		</fig-group>
@@ -1732,9 +1814,10 @@
 		<xsl:variable name="current_id">
 			<xsl:call-template name="getId"/>
 		</xsl:variable>
-		<xsl:variable name="id" select="xalan:nodeset($elements)//element[@source_id = $current_id]/@id"/>
-		<xsl:variable name="section" select="xalan:nodeset($elements)//element[@source_id = $current_id]/@section"/>
-		<fig fig-type="figure" id="{$id}">
+		<!-- <xsl:variable name="id" select="$elements//element[@source_id = $current_id]/@id"/> -->
+		<xsl:variable name="id"><xsl:call-template name="getId"/></xsl:variable>
+		<xsl:variable name="section" select="$elements//element[@source_id = $current_id]/@section"/>
+		<fig id="{$id}" fig-type="figure">
 			<label>
 				<xsl:choose>
 					<xsl:when test="ancestor::*[local-name() = 'amend']/*[local-name() = 'autonumber'][@type = 'figure']">
@@ -1770,10 +1853,11 @@
 	</xsl:template>
 	
 	<xsl:template match="*[local-name() = 'figure']/*[local-name() = 'image']">
-		<xsl:variable name="current_id">
+		<!--<xsl:variable name="current_id">
 			<xsl:call-template name="getId"/>
 		</xsl:variable>
-		<xsl:variable name="id" select="xalan:nodeset($elements)//element[@source_id = $current_id]/@id"/>
+		 <xsl:variable name="id" select="$elements//element[@source_id = $current_id]/@id"/> -->
+		<xsl:variable name="id"><xsl:call-template name="getId"/></xsl:variable>
 		<!-- NISO STS TagLibrary: https://www.niso-sts.org/TagLibrary/niso-sts-TL-1-0-html/element/graphic.html -->
 		<graphic id="{$id}" xlink:href="{$id}">
 			<!-- <xsl:copy-of select="@mimetype"/> -->
@@ -1819,8 +1903,9 @@
 		</xsl:if>
 		<disp-formula>
 			<xsl:if test="parent::*[local-name() = 'formula']">
-				<xsl:variable name="current_id" select="../@id"/>		
-				<xsl:variable name="id" select="xalan:nodeset($elements)//element[@source_id = $current_id]/@id"/>
+				<!-- <xsl:variable name="current_id" select="../@id"/>		
+				<xsl:variable name="id" select="$elements//element[@source_id = $current_id]/@id"/> -->
+				<xsl:variable name="id"><xsl:call-template name="getId"/></xsl:variable>
 				<xsl:attribute name="id">
 					<xsl:value-of select="$id"/>
 				</xsl:attribute>
