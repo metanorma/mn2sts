@@ -936,6 +936,12 @@
 		
 	</xsl:template>
 	
+	<xsl:template match="*[local-name() = 'references']/*[local-name() = 'bibitem']/*[local-name() = 'docidentifier' or local-name() = 'docnumber' or local-name() = 'date' or local-name() = 'contributor']" priority="2">
+		<xsl:text disable-output-escaping="yes">&lt;!--</xsl:text>
+			<xsl:copy-of select="."/>
+		<xsl:text disable-output-escaping="yes">--&gt;</xsl:text>
+	</xsl:template>
+	
 	<xsl:template match="*[local-name() = 'bibitem']/*[local-name() = 'title']" priority="2">
 		<xsl:text>, </xsl:text>
 		<title><xsl:apply-templates/></title>
@@ -1199,6 +1205,13 @@
 	
 	
 	<!-- <xsl:template match="*[local-name() = 'termexample'] | *[local-name() = 'termnote'] | *[local-name() = 'termsource']"/> -->
+	
+	<!-- temporary solution for https://github.com/metanorma/iso-10303-2/issues/44 -->
+	<xsl:template match="*[local-name() = 'clause']/*[local-name() = 'domain'] | *[local-name() = 'clause']/*[local-name() = 'termsource']" priority="2">
+		<xsl:text disable-output-escaping="yes">&lt;!--</xsl:text>
+			<xsl:copy-of select="."/>
+		<xsl:text disable-output-escaping="yes">--&gt;</xsl:text>
+	</xsl:template>
 	
 	<!-- <xsl:template match="*[local-name() = 'preferred'] | *[local-name() = 'admitted'] | *[local-name() = 'deprecates'] | *[local-name() = 'domain']"/> -->
 	<xsl:template match="*[local-name() = 'preferred'] | *[local-name() = 'admitted'] | *[local-name() = 'deprecates'] | *[local-name() = 'domain']"> <!--  mode="termEntry" -->
@@ -1477,6 +1490,10 @@
 		<bold><xsl:apply-templates /></bold>
 	</xsl:template>
 
+	<xsl:template match="*[local-name() = 'sup'][*[local-name() = 'stem']]">
+		<xsl:apply-templates />
+	</xsl:template>
+
 	<!-- <xsl:template match="*[local-name() = 'definition']//*[local-name() = 'em']" priority="2"> -->
 	<!-- for em, when next is xref -->
 	<xsl:template match="*[local-name() = 'em'][following-sibling::*[1][local-name() = 'xref']]" priority="2">
@@ -1485,7 +1502,7 @@
 			<!-- <xsl:variable name="section" select="$elements//element[@source_id = $target]/@section"/> -->
 			<xsl:attribute name="target">
 				<!-- <xsl:text>term_</xsl:text><xsl:value-of select="$section"/> -->
-				<xsl:text>term_</xsl:text><xsl:value-of select="$target"/>
+				<!-- <xsl:text>term_</xsl:text> --><xsl:value-of select="$target"/>
 			</xsl:attribute>
 			<xsl:apply-templates />
 		</tbx:entailedTerm>
