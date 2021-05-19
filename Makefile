@@ -31,7 +31,8 @@ tests/iso-8601-1/documents/iso-tc154-8601-1-en.xml:
 ifeq ($(OS),Windows_NT)
 	$(MAKE) -C tests/iso-8601-1 -f Makefile.win all SHELL=cmd
 else
-	$(MAKE) -C tests/iso-8601-1 all
+	metanorma compile tests/iso-8601-1/sources/iso-tc154-8601-1-en.adoc —agree-to-terms
+#	$(MAKE) -C tests/iso-8601-1 all
 endif
 
 src/test/resources/iso-rice-en.cd.mn.xml: tests/mn-samples-iso/documents/international-standard/rice-en.cd.xml
