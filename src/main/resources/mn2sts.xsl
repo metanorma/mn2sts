@@ -188,7 +188,14 @@
 				</xsl:choose>				
 			</xsl:variable>
 			
-			<element source_id="{$source_id}" id="{$id}" section="{$section}" parent="{$name}"/>
+			<xsl:variable name="parent">
+				<xsl:choose>
+					<xsl:when test="ancestor::*[local-name() = 'annex'] and not($name = 'figure' or $name = 'table' or $name = 'annex' or $name = 'fn')">annex</xsl:when>
+					<xsl:otherwise><xsl:value-of select="$name"/></xsl:otherwise>
+				</xsl:choose>
+			</xsl:variable>
+			
+			<element source_id="{$source_id}" id="{$id}" section="{$section}" parent="{$parent}"/>
 			<xsl:if test="$debug = 'true'">
 				<!-- <xsl:message><xsl:value-of select="$source_id"/></xsl:message> -->
 			</xsl:if>
