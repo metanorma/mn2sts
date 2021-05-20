@@ -35,6 +35,10 @@ jobs:
         run: |
           gem install bundler
 
+      - name: Install metanorma-cli
+        run: |
+          bundle add metanorma-cli
+
       - name: Metanorma compile
         run: |
           make clean all SHELL=cmd
