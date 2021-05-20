@@ -37,6 +37,10 @@ jobs:
           # echo "::add-path::/snap/bin"
           echo "/snap/bin" >> $GITHUB_PATH
 
+      - name: Instal gems from local Gemfile
+        run: |
+          curl -L --retry 3 https://raw.githubusercontent.com/metanorma/metanorma-build-scripts/master/gemfile-to-bundle-add.sh | bash
+
 #      - uses: actions/checkout@master
 
       - name: Run tests
