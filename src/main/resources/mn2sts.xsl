@@ -2082,6 +2082,10 @@
 	
 	<xsl:template match="*[local-name() = 'amend']/*[local-name() = 'autonumber']"/>
 	
+	<xsl:template match="comment()[starts-with(., 'STS: ')]">
+		<xsl:value-of disable-output-escaping="yes" select="substring-after(., 'STS: ')"/>
+	</xsl:template>
+	
 	<xsl:template name="getLevel">
 		<xsl:variable name="level_total" select="count(ancestor::*)"/>
 		<xsl:variable name="level">
