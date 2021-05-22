@@ -624,6 +624,19 @@
 		<ics><xsl:apply-templates mode="front"/></ics>
 	</xsl:template>
 
+	<xsl:template match="*[local-name() = 'ext']/*[local-name() = 'doctype']" mode="front">
+		<xsl:variable name="value" select="normalize-space()"/>
+		<xsl:choose>
+			<xsl:when test="$value = 'international-standard'">IS</xsl:when>
+			<xsl:when test="$organization = 'BSI'">
+				<xsl:call-template name="capitalize">
+					<xsl:with-param name="str" select="$value"/>
+				</xsl:call-template>
+			</xsl:when>
+			<xsl:otherwise><xsl:value-of select="$value"/></xsl:otherwise>
+		</xsl:choose>
+	</xsl:template>
+
 	<xsl:template match="*[local-name() = 'ext']/*[local-name() = 'subdoctype']" mode="front">
 		<xsl:text disable-output-escaping="yes">&lt;!--</xsl:text>
 			<xsl:copy-of select="."/>
