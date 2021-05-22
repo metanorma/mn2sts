@@ -456,7 +456,14 @@
 				<xsl:value-of select="substring-before(*[local-name() = 'docidentifier'], ':')"/>
 			</std-ref>
 			<doc-ref>
-				<xsl:apply-templates select="*[local-name() = 'docidentifier'][@type='iso-with-lang']" mode="front"/>
+				<xsl:choose>
+					<xsl:when test="*[local-name() = 'docidentifier'][@type='iso-reference']">
+						<xsl:apply-templates select="*[local-name() = 'docidentifier'][@type='iso-reference'][last()]" mode="front"/>
+					</xsl:when>
+					<xsl:otherwise>
+						<xsl:apply-templates select="*[local-name() = 'docidentifier'][@type='iso-with-lang']" mode="front"/>
+					</xsl:otherwise>
+				</xsl:choose>
 			</doc-ref>
 			
 			<!-- <release-date> -->
@@ -602,17 +609,20 @@
 	<xsl:template match="*[local-name() = 'bibdata']/*[local-name() = 'date']/*[local-name() = 'on']" mode="front">
 		<xsl:choose>
 			<xsl:when test="position() = 1 and ../@type = 'published' and ../following-sibling::*[local-name() = 'date']/@type = 'published' ">
-				<pub-date pub-type="PUBL">
+				<pub-date>
+					<xsl:if test="$organization = 'BSI'">
+						<xsl:attribute name="pub-type">PUBL</xsl:attribute>
+					</xsl:if>
 					<xsl:value-of select="."/>
 				</pub-date>
 			</xsl:when>
 			<xsl:otherwise>
 				<release-date>
-					<xsl:if test="parent::*/@type">
+					<!-- <xsl:if test="parent::*/@type">
 						<xsl:attribute name="date-type">
 							<xsl:value-of select="parent::*/@type"/>
 						</xsl:attribute>
-					</xsl:if>
+					</xsl:if> -->
 					<xsl:value-of select="."/>
 				</release-date>
 			</xsl:otherwise>
@@ -762,9 +772,12 @@
 		</copyright-statement>
 	</xsl:template>
 	<xsl:template match="*[local-name() = 'boilerplate']/*[local-name() = 'copyright-statement']//*[local-name() = 'p']"  priority="1">
-		<copyright-statement>
-			<xsl:apply-templates/>
-		</copyright-statement>
+		<xsl:variable name="id" select="normalize-space(@id)"/>
+		<xsl:if test="$id != 'boilerplate-year'">
+			<copyright-statement>
+				<xsl:apply-templates/>
+			</copyright-statement>
+		</xsl:if>
 	</xsl:template>
 	<xsl:template match="*[local-name() = 'boilerplate']/*[local-name() = 'copyright-statement']//*[local-name() = 'p']//*[local-name() = 'br']"  priority="1">
 		<xsl:value-of select="'&#x2028;'"/><!-- linebreak -->
