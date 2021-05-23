@@ -1560,13 +1560,30 @@
 				<!-- <xsl:text>term_</xsl:text> --><xsl:value-of select="$target"/>
 			</xsl:attribute>
 			<xsl:apply-templates />
+			<xsl:apply-templates select="following-sibling::*[1]" mode="em_xref"/><!-- get xref -->
 		</tbx:entailedTerm>
 	</xsl:template>
 	
-
 	<!-- for xref, when previous is em -->
-	<xsl:template match="*[local-name() = 'xref'][preceding-sibling::*[1][local-name() = 'em']]" priority="2">
+	<xsl:template match="*[local-name() = 'xref']" mode="em_xref">
+		<xsl:text> </xsl:text>
+		<!-- preceding-sibling-text='<xsl:value-of select="normalize-space(preceding-sibling::node()[1])"/>' -->
+		<xsl:if test="normalize-space(preceding-sibling::node()[1]) ='('">(</xsl:if>
+		<xsl:value-of select="normalize-space()"/>
+		<xsl:if test="substring(normalize-space(following-sibling::node()[1]),1,1) =')'">)</xsl:if>
+		<!-- following-sibling-text='<xsl:value-of select="following-sibling::node()[1]"/>' -->
+	</xsl:template>
+	
+	<xsl:template match="*[local-name() = 'xref'][preceding-sibling::*[1][local-name() = 'em']]" priority="2"/>
+	<!-- <xsl:template match="*[local-name() = 'xref'][preceding-sibling::*[1][local-name() = 'em']]" priority="2">
 		<xsl:value-of select="$elements//element[@source_id = current()/@target]/@section"/>	
+	</xsl:template> -->
+	
+	<!-- remove '(' between em and xref -->
+	<xsl:template match="text()[normalize-space() = '('][preceding-sibling::*[1][local-name() = 'em'] and following-sibling::*[1][local-name() = 'xref']]"/>
+	<!-- remove ')' after em and xref -->
+	<xsl:template match="text()[substring(normalize-space(),1,1) = ')'][preceding-sibling::*[1][local-name() = 'xref'] and preceding-sibling::*[2][local-name() = 'em']]">
+		<xsl:value-of select="substring-after(., ')')"/>
 	</xsl:template>
 	
 	<xsl:template match="*[local-name() = 'em']">
