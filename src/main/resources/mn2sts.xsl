@@ -1269,7 +1269,13 @@
 				</xsl:choose>
 			</xsl:variable>
 			<xsl:if test="normalize-space($normativeAuthorization) != ''">
-				<tbx:normativeAuthorization value="{$normativeAuthorization}"/>
+				<xsl:choose>
+					<xsl:when test="$element_name = 'preferred' and not(following-sibling::*[local-name() = 'admitted'] or preceding-sibling::*[local-name() = 'admitted'] or
+					following-sibling::*[local-name() = 'deprecates'] or preceding-sibling::*[local-name() = 'deprecates'])"></xsl:when>
+					<xsl:otherwise>
+						<tbx:normativeAuthorization value="{$normativeAuthorization}"/>
+					</xsl:otherwise>
+				</xsl:choose>
 			</xsl:if>
 		</tbx:tig>
 	</xsl:template>
