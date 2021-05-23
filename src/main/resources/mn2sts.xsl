@@ -172,6 +172,9 @@
 					<xsl:when test="local-name() = 'term' and normalize-space(*[local-name() = 'name']) != '' and  normalize-space(translate(*[local-name() = 'name'], '0123456789.', '')) = ''">
 						<xsl:value-of select="*[local-name() = 'name']"/>
 					</xsl:when>
+					<xsl:when test="*[local-name() = 'title'] and not(*[local-name() = 'title']/*[local-name() = 'tab']) and normalize-space(translate(*[local-name() = 'title'], '0123456789.', '')) = ''">
+						<xsl:value-of select="*[local-name() = 'title']"/>
+					</xsl:when>
 					<xsl:when test="local-name() = 'figure' and contains(*[local-name() = 'name'], '&#8212; ')">
 						<xsl:variable name="figure_name" select="substring-before(*[local-name() = 'name'], '&#8212; ')"/>
 						<xsl:value-of select="translate(normalize-space(translate($figure_name, '&#xa0;', ' ')), ' ', '&#xa0;')"/>
@@ -2056,16 +2059,21 @@
 	</xsl:template>
 	
 	<xsl:template match="*[local-name() = 'title']">
-		<title>
-			<xsl:choose>
-				<xsl:when test="*[local-name() = 'tab']">
-					<xsl:apply-templates select="*[local-name() = 'tab'][1]/following-sibling::node()"/>
-				</xsl:when>
-				<xsl:otherwise>
-					<xsl:apply-templates />
-				</xsl:otherwise>
-			</xsl:choose>
-		</title>
+		<xsl:choose>
+			<xsl:when test="not(*[local-name() = 'tab']) and normalize-space(translate(., '0123456789.', '')) = ''"><!-- put number in label, see above --></xsl:when>
+			<xsl:otherwise>
+				<title>
+					<xsl:choose>
+						<xsl:when test="*[local-name() = 'tab']">
+							<xsl:apply-templates select="*[local-name() = 'tab'][1]/following-sibling::node()"/>
+						</xsl:when>
+						<xsl:otherwise>
+							<xsl:apply-templates />
+						</xsl:otherwise>
+					</xsl:choose>
+				</title>
+			</xsl:otherwise>
+		</xsl:choose>
 	</xsl:template>
 	
 	<xsl:template match="*[local-name() = 'title']/@depth"/>
