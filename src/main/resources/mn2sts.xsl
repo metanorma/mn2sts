@@ -1127,7 +1127,7 @@
 		<xsl:variable name="current_id">
 			<xsl:call-template name="getId"/>
 		</xsl:variable>
-		<xsl:variable name="section" select="$elements//element[@source_id = $current_id]/@section"/>
+		<!-- <xsl:variable name="section" select="$elements//element[@source_id = $current_id]/@section"/> -->
 		<!-- <xsl:variable name="id" select="$elements//element[@source_id = $current_id]/@id"/> -->
 		
 		<!-- <xsl:variable name="id"><xsl:call-template name="getId"/></xsl:variable> -->
@@ -1144,9 +1144,9 @@
 			</xsl:choose>
 		</xsl:variable>
 
-		<term-sec id="{$current_id}">
+		<term-sec id="sec_{$section}"><!-- id="{$current_id}" -->
 			<label><xsl:value-of select="$section"/></label>
-			<tbx:termEntry id="term_{$section}">
+			<tbx:termEntry id="{$current_id}">
 				<tbx:langSet xml:lang="en">
 					<xsl:apply-templates select="node()[not(local-name() = 'termexample' or local-name() = 'termnote' or local-name() = 'termsource' or 
 																										local-name() = 'preferred' or local-name() = 'admitted' or local-name() = 'deprecates' or local-name() = 'domain')]">
@@ -1255,7 +1255,13 @@
 		</xsl:variable>
 		
 		<xsl:variable name="id" select="$elements//element[@source_id = $current_id]/@id"/>	 -->
-		<xsl:variable name="id"><xsl:call-template name="getId"/></xsl:variable>
+		<!-- <xsl:variable name="id"><xsl:call-template name="getId"/></xsl:variable> -->
+		<xsl:variable name="number"><xsl:number count="*[local-name() = 'preferred'] | *[local-name() = 'admitted'] | *[local-name() = 'deprecates'] | *[local-name() = 'domain']"/></xsl:variable>
+		<xsl:variable name="id">
+			<xsl:for-each select="ancestor::*[local-name() = 'term'][1]">
+				<xsl:call-template name="getId"/><xsl:text>-</xsl:text><xsl:value-of select="$number"/>
+			</xsl:for-each>
+		</xsl:variable>
 		
 		<tbx:tig id="{$id}">
 			<tbx:term><xsl:apply-templates /></tbx:term>
