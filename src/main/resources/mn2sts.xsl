@@ -1472,7 +1472,25 @@
 	<xsl:variable name="bibitems_URN" select="xalan:nodeset($bibitems_URN_)"/>
 		
 	<xsl:template match="*[local-name() = 'eref']">
+		<xsl:variable name="citeas_" select="java:replaceAll(java:java.lang.String.new(@citeas),'--','—')"/>
+		<xsl:variable name="citeas">
+			<xsl:choose>
+				<!-- if citeas enclosed in [ ], then remove it -->
+				<xsl:when test="starts-with($citeas_, '[') and substring($citeas_, string-length($citeas_)) = ']'">
+					<xsl:value-of select="substring($citeas_, 2, string-length($citeas_) - 2)"/>
+				</xsl:when>
+				<xsl:otherwise>
+					<xsl:value-of select="$citeas_"/>
+				</xsl:otherwise>
+			</xsl:choose>
+		</xsl:variable>
 		<std>
+			<xsl:attribute name="type">
+				<xsl:choose>
+					<xsl:when test="substring($citeas, string-length($citeas) - 4, 1) = ':' and translate(substring($citeas, string-length($citeas) - 3), '0123456789', '') = ''">dated</xsl:when>
+					<xsl:otherwise>undated</xsl:otherwise>
+				</xsl:choose>
+			</xsl:attribute>
 			<xsl:variable name="reference" select="@bibitemid"/>
 			<!-- <xsl:variable name="docidentifier_URN" select="//*[local-name() = 'bibitem'][@id = $reference]/*[local-name() = 'docidentifier'][@type = 'URN']"/> -->
 			<xsl:variable name="docidentifier_URN" select="$bibitems_URN/bibitem[@id = $reference]/urn"/>
@@ -1483,18 +1501,7 @@
 			</xsl:if>
 			
 			<std-ref>
-				<xsl:variable name="citeas_" select="java:replaceAll(java:java.lang.String.new(@citeas),'--','—')"/>
-				<xsl:variable name="citeas">
-					<xsl:choose>
-						<!-- if citeas enclosed in [ ], then remove it -->
-						<xsl:when test="starts-with($citeas_, '[') and substring($citeas_, string-length($citeas_)) = ']'">
-							<xsl:value-of select="substring($citeas_, 2, string-length($citeas_) - 2)"/>
-						</xsl:when>
-						<xsl:otherwise>
-							<xsl:value-of select="$citeas_"/>
-						</xsl:otherwise>
-					</xsl:choose>
-				</xsl:variable>
+				
 				<xsl:choose>
 					<xsl:when test="$organization = 'BSI'">
 						<xsl:value-of select="translate($citeas, ' ', '&#xA0;')"/><!-- replace space to non-break space -->
