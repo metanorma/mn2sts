@@ -314,8 +314,8 @@
 				</back>
 			</xsl:if>
 			<xsl:if test="$debug = 'true'">
-				<xsl:value-of select="count($elements//element)"/>
 				<xsl:text disable-output-escaping="yes">&lt;!-- </xsl:text>
+				<xsl:value-of select="count($elements//element)"/>
 				<!-- <xsl:copy-of select="xalan:nodeset($elements)"/> -->
 				<xsl:copy-of select="$elements"/>
 				<xsl:text disable-output-escaping="yes">--&gt;</xsl:text>
@@ -677,10 +677,9 @@
 		<std-ref>
 			<xsl:copy-of select="@*"/>
 			<xsl:attribute name="type">
-				<xsl:choose>
-					<xsl:when test="contains(., ':')">dated</xsl:when>
-					<xsl:otherwise>undated</xsl:otherwise>
-				</xsl:choose>
+				<xsl:call-template name="setDatedUndatedType">
+					<xsl:with-param name="value" select="."/>
+				</xsl:call-template>
 			</xsl:attribute>
 			<xsl:apply-templates mode="front"/>
 		</std-ref>
@@ -894,10 +893,18 @@
 				</xsl:if>
 			</xsl:attribute>
 			<xsl:apply-templates select="*[local-name() = 'title'][1]" mode="back"/>
-			<ref-list>
-				<xsl:apply-templates select="*[local-name() = 'title'][2]" mode="back"/>
-				<xsl:apply-templates/>
-			</ref-list>
+			
+			<xsl:choose>
+				<xsl:when test="*[local-name() = 'title'][2]">
+					<ref-list>
+						<xsl:apply-templates select="*[local-name() = 'title'][2]" mode="back"/>
+						<xsl:apply-templates/>
+					</ref-list>
+				</xsl:when>
+				<xsl:otherwise>
+					<xsl:apply-templates/>
+				</xsl:otherwise>
+			</xsl:choose>
 		</ref-list>
 	</xsl:template>
 	<xsl:template match="*[local-name() = 'bibliography']/*[local-name() = 'references'][not(@normative='true')]/*[local-name() = 'title']" priority="2"/>
@@ -915,6 +922,7 @@
 	<xsl:template match="*[local-name() = 'bibitem'][position() &gt; 1][ancestor::*[local-name() = 'references'][@normative='true']]" priority="2"/>
 	
 	<xsl:variable name="count_non_normative_references" select="count(//*[local-name() = 'references'][not(@normative='true')])"/>
+	
 	<xsl:template match="*[local-name() = 'bibitem']" name="bibitem">
 		<xsl:variable name="current_id">
 			<xsl:call-template name="getId"/>
@@ -934,10 +942,11 @@
 				</xsl:if>
 			</xsl:attribute>
 			
+			<xsl:apply-templates select="*[local-name() = 'docidentifier'][@type = 'metanorma']" mode="docidentifier_metanorma"/>
 			<xsl:if test="not(*[local-name() = 'docidentifier'][@type='metanorma'])">
 				<label><xsl:number format="[1]"/></label> <!-- see docidentifier @type="metanorma" -->
 			</xsl:if>
-			
+						
 			<xsl:choose>
 				<xsl:when test="count(*) = 2 and *[local-name() = 'docidentifier'][@type='metanorma'] and *[local-name() = 'title']">
 					<xsl:apply-templates select="*[local-name() = 'docidentifier']"/>
@@ -945,11 +954,21 @@
 				</xsl:when>
 				<xsl:otherwise>
 					<std>
-						<xsl:if test="*[local-name() = 'docidentifier'][@type = 'URN']">
-							<xsl:attribute name="std-id"><xsl:value-of select="*[local-name() = 'docidentifier'][@type = 'URN']"/></xsl:attribute>
+						<xsl:variable name="urn" select="*[local-name() = 'docidentifier'][@type = 'URN']"/>
+						<xsl:if test="normalize-space($urn) != ''">
+							<xsl:attribute name="std-id"><xsl:value-of select="$urn"/></xsl:attribute>
 						</xsl:if>
-						<xsl:if test="*[local-name() = 'docidentifier']">
-							<std-ref><xsl:value-of select="*[local-name() = 'docidentifier']"/></std-ref>
+						<xsl:if test="*[local-name() = 'eref']/@citeas">
+							<xsl:attribute name="type">
+								<xsl:call-template name="setDatedUndatedType">
+									<xsl:with-param name="value" select="*[local-name() = 'eref']/@citeas"/>
+								</xsl:call-template>
+							</xsl:attribute>
+						</xsl:if>
+						
+						
+						<xsl:if test="*[local-name() = 'docidentifier'][not(@type = 'metanorma' or @type = 'URN')]">
+							<std-ref><xsl:value-of select="*[local-name() = 'docidentifier'][not(@type = 'metanorma' or @type = 'URN')]"/></std-ref>
 						</xsl:if>
 						
 						<xsl:choose>
@@ -991,9 +1010,12 @@
 		<title><xsl:apply-templates/></title>
 	</xsl:template>
 	
-	<xsl:template match="*[local-name() = 'bibitem']/*[local-name() = 'docidentifier'][@type = 'metanorma']">
+	<xsl:template match="*[local-name() = 'bibitem']/*[local-name() = 'docidentifier'][@type = 'metanorma']" mode="docidentifier_metanorma">
 		<label><xsl:apply-templates /></label>
 	</xsl:template>
+	
+	<xsl:template match="*[local-name() = 'bibitem']/*[local-name() = 'docidentifier'][@type = 'metanorma']" priority="3"/>
+	<xsl:template match="*[local-name() = 'bibitem']/*[local-name() = 'docidentifier'][@type = 'URN']" priority="3"/>
 	
 	<xsl:template match="*[local-name() = 'formattedref']/*[local-name() = 'em']" priority="2">
 		<xsl:apply-templates/>
@@ -1495,10 +1517,9 @@
 		</xsl:variable>
 		<std>
 			<xsl:attribute name="type">
-				<xsl:choose>
-					<xsl:when test="substring($citeas, string-length($citeas) - 4, 1) = ':' and translate(substring($citeas, string-length($citeas) - 3), '0123456789', '') = ''">dated</xsl:when>
-					<xsl:otherwise>undated</xsl:otherwise>
-				</xsl:choose>
+				<xsl:call-template name="setDatedUndatedType">
+					<xsl:with-param name="value" select="$citeas"/>
+				</xsl:call-template>
 			</xsl:attribute>
 			<xsl:variable name="reference" select="@bibitemid"/>
 			<!-- <xsl:variable name="docidentifier_URN" select="//*[local-name() = 'bibitem'][@id = $reference]/*[local-name() = 'docidentifier'][@type = 'URN']"/> -->
@@ -2285,5 +2306,12 @@
 		<xsl:value-of select="substring($str, 2)"/>		
 	</xsl:template>
 
+	<xsl:template name="setDatedUndatedType">
+		<xsl:param name="value"/>
+		<xsl:choose>
+			<xsl:when test="substring($value, string-length($value) - 4, 1) = ':' and translate(substring($value, string-length($value) - 3), '0123456789', '') = ''">dated</xsl:when>
+			<xsl:otherwise>undated</xsl:otherwise>
+		</xsl:choose>
+	</xsl:template>
 	
 </xsl:stylesheet>
