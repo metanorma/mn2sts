@@ -28,7 +28,7 @@ src/test/resources/iso-tc154-8601-1-en.mn.xml: tests/iso-8601-1/documents/iso-tc
 	cp $< $@
 
 tests/iso-8601-1/documents/iso-tc154-8601-1-en.xml:
-	metanorma site generate tests/iso-8601-1 -o tests/iso-8601-1 --agree-to-terms
+	metanorma site generate -t iso tests/iso-8601-1 -o tests/iso-8601-1 --agree-to-terms
 #ifeq ($(OS),Windows_NT)
 #	$(MAKE) -C tests/iso-8601-1 -f Makefile.win all SHELL=cmd
 #else	
