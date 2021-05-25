@@ -175,9 +175,9 @@
 					<xsl:when test="*[local-name() = 'title'] and not(*[local-name() = 'title']/*[local-name() = 'tab']) and normalize-space(translate(*[local-name() = 'title'], '0123456789.', '')) = ''">
 						<xsl:value-of select="*[local-name() = 'title']"/>
 					</xsl:when>
-					<xsl:when test="local-name() = 'figure' and contains(*[local-name() = 'name'], '&#8212; ')">
-						<xsl:variable name="figure_name" select="substring-before(*[local-name() = 'name'], '&#8212; ')"/>
-						<xsl:value-of select="translate(normalize-space(translate($figure_name, '&#xa0;', ' ')), ' ', '&#xa0;')"/>
+					<xsl:when test="(local-name() = 'table' or local-name() = 'figure') and contains(*[local-name() = 'name'], '&#8212; ')">
+						<xsl:variable name="_name" select="substring-before(*[local-name() = 'name'], '&#8212; ')"/>
+						<xsl:value-of select="translate(normalize-space(translate($_name, '&#xa0;', ' ')), ' ', '&#xa0;')"/>
 					</xsl:when>
 					<xsl:when test="$section_ = '0' and not(@type='intro')"></xsl:when>
 					<xsl:otherwise>
@@ -1661,6 +1661,7 @@
 				<xsl:when test="$parent = 'table'">table</xsl:when>
 				<xsl:when test="$parent = 'annex'">app</xsl:when>
 				<xsl:when test="$parent = 'fn'">fn</xsl:when>
+				<xsl:when test="$parent = 'bibitem'">bibr</xsl:when>
 				<xsl:otherwise>sec</xsl:otherwise>
 			</xsl:choose>
 		</xsl:variable>
