@@ -1487,19 +1487,24 @@
 		</xsl:if> -->
 		<xsl:variable name="clause_id" select="ancestor::*[local-name() = 'clause'][1]/@id"/>		
 		<non-normative-note>
-			<label>
-				<xsl:text>NOTE</xsl:text>
-				<xsl:if test="ancestor::*[local-name() = 'amend']/*[local-name() = 'autonumber'][@type = 'note']">
-					<xsl:text>&#xA0;</xsl:text><xsl:value-of select="ancestor::*[local-name() = 'amend']/*[local-name() = 'autonumber'][@type = 'note']/text()"/>
-				</xsl:if>
-				<xsl:if test="count(ancestor::*[local-name() = 'clause'][1]//*[local-name() = 'note']) &gt; 1">
-					<xsl:text>&#xA0;</xsl:text><xsl:number level="any" count="*[local-name() = 'note'][ancestor::*[local-name() = 'clause'][@id = $clause_id]]"/>
-				</xsl:if>
-			</label>
+			<xsl:if test="not(*[local-name() = 'name'])">
+				<label>
+					<xsl:text>NOTE</xsl:text>
+					<xsl:if test="ancestor::*[local-name() = 'amend']/*[local-name() = 'autonumber'][@type = 'note']">
+						<xsl:text>&#xA0;</xsl:text><xsl:value-of select="ancestor::*[local-name() = 'amend']/*[local-name() = 'autonumber'][@type = 'note']/text()"/>
+					</xsl:if>
+					<xsl:if test="count(ancestor::*[local-name() = 'clause'][1]//*[local-name() = 'note']) &gt; 1">
+						<xsl:text>&#xA0;</xsl:text><xsl:number level="any" count="*[local-name() = 'note'][ancestor::*[local-name() = 'clause'][@id = $clause_id]]"/>
+					</xsl:if>
+				</label>
+			</xsl:if>
 			<xsl:apply-templates/>
 		</non-normative-note>
 	</xsl:template>
 	
+	<xsl:template match="*[local-name() = 'note']/*[local-name() = 'name']" priority="2">
+		<label><xsl:apply-templates /></label>
+	</xsl:template>
 	
 	<xsl:variable name="bibitems_URN_">
 		<xsl:for-each select="//*[local-name() = 'bibitem'][*[local-name() = 'docidentifier'][@type = 'URN']]">
@@ -1983,7 +1988,7 @@
 	</xsl:template>
 	
 	
-	<xsl:template match="*[local-name() = 'figure']/*[local-name() = 'name']">
+	<xsl:template match="*[local-name() = 'figure']/*[local-name() = 'name']" priority="2">
 		<caption>
 			<title>
 				<xsl:apply-templates/>
