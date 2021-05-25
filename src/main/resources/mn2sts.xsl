@@ -863,13 +863,17 @@
 		<xsl:variable name="id"><xsl:call-template name="getId"/></xsl:variable>
 		<xsl:variable name="section" select="$elements//element[@source_id = $current_id]/@section"/>
 		<app id="{$id}" content-type="inform-annex">
-			<xsl:attribute name="content-type">
-				<xsl:choose>
-					<xsl:when test="@obligation  = 'informative'">inform-annex</xsl:when>
-					<xsl:when test="normalize-space(@obligation) != ''"><xsl:value-of select="@obligation"/></xsl:when>
-					<!-- <xsl:otherwise></xsl:otherwise> -->
-				</xsl:choose>
-			</xsl:attribute>
+			<xsl:if test="normalize-space(@obligation) != ''">
+				<xsl:attribute name="content-type">
+					<xsl:choose>
+						<xsl:when test="@obligation  = 'informative'">inform-annex</xsl:when>
+						<xsl:otherwise><xsl:value-of select="@obligation"/></xsl:otherwise>
+					</xsl:choose>
+				</xsl:attribute>
+			</xsl:if>
+			<xsl:if test="$organization = 'BSI' and normalize-space(@obligation) = ''">
+				<xsl:attribute name="content-type">norm-annex</xsl:attribute>
+			</xsl:if>
 			<label>
 				<xsl:choose>
 					<xsl:when test="ancestor::*[local-name() = 'amend']/*[local-name() = 'autonumber'][@type = 'annex']">
