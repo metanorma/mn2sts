@@ -311,6 +311,7 @@
 						</app-group>
 					</xsl:if>
 					<xsl:apply-templates select="*[local-name() = 'bibliography']/*[local-name() = 'references'][not(@normative='true')]" mode="back"/>
+					<xsl:apply-templates select="*[local-name() = 'indexsect']"/>
 				</back>
 			</xsl:if>
 			<xsl:if test="$debug = 'true'">
@@ -864,8 +865,9 @@
 		<app id="{$id}" content-type="inform-annex">
 			<xsl:attribute name="content-type">
 				<xsl:choose>
-					<xsl:when test="@obligation   = 'informative'">inform-annex</xsl:when>
-					<xsl:otherwise><xsl:value-of select="@obligation"/></xsl:otherwise>
+					<xsl:when test="@obligation  = 'informative'">inform-annex</xsl:when>
+					<xsl:when test="normalize-space(@obligation) != ''"><xsl:value-of select="@obligation"/></xsl:when>
+					<!-- <xsl:otherwise></xsl:otherwise> -->
 				</xsl:choose>
 			</xsl:attribute>
 			<label>
@@ -878,7 +880,9 @@
 					</xsl:otherwise>
 				</xsl:choose>
 			</label>
-			<annex-type>(<xsl:value-of select="@obligation"/>)</annex-type>
+			<xsl:if test="normalize-space(@obligation) != ''">
+				<annex-type>(<xsl:value-of select="@obligation"/>)</annex-type>
+			</xsl:if>
 			<xsl:apply-templates />
 		</app>
 	</xsl:template>
@@ -924,10 +928,10 @@
 	<xsl:variable name="count_non_normative_references" select="count(//*[local-name() = 'references'][not(@normative='true')])"/>
 	
 	<xsl:template match="*[local-name() = 'bibitem']" name="bibitem">
-		<xsl:variable name="current_id">
+		<!-- <xsl:variable name="current_id">
 			<xsl:call-template name="getId"/>
 		</xsl:variable>
-		<!-- <xsl:variable name="id" select="$elements//element[@source_id = $current_id]/@id"/> -->
+		<xsl:variable name="id" select="$elements//element[@source_id = $current_id]/@id"/> -->
 		<xsl:variable name="id"><xsl:call-template name="getId"/></xsl:variable>
 		<ref>
 			<xsl:if test="normalize-space(@type) != ''">
@@ -936,15 +940,16 @@
 				</xsl:attribute>
 			</xsl:if>
 			
-			<xsl:attribute name="id"><xsl:value-of select="$id"/>
+			<!-- <xsl:attribute name="id"><xsl:value-of select="$id"/>
 				<xsl:if test="$count_non_normative_references &gt; 1">
 					<xsl:number format="_1" count="*[local-name() = 'references'][not(@normative='true')]"/>
 				</xsl:if>
-			</xsl:attribute>
+			</xsl:attribute> -->
+			<xsl:copy-of select="@id"/>
 			
 			<xsl:apply-templates select="*[local-name() = 'docidentifier'][@type = 'metanorma']" mode="docidentifier_metanorma"/>
 			<xsl:if test="not(*[local-name() = 'docidentifier'][@type='metanorma'])">
-				<label><xsl:number format="[1]"/></label> <!-- see docidentifier @type="metanorma" -->
+				<!-- <label><xsl:number format="[1]"/></label> --> <!-- see docidentifier @type="metanorma" -->
 			</xsl:if>
 						
 			<xsl:choose>
@@ -1106,7 +1111,7 @@
 				<xsl:when test="@type='scope'">scope</xsl:when>
 				<xsl:when test="@type='intro'">intro</xsl:when>
 				<xsl:when test="@normative='true'">norm-refs</xsl:when>
-				<xsl:when test="@id = 'tda' or @id = 'terms' or local-name() = 'terms'">terms</xsl:when>
+				<xsl:when test="@id = 'tda' or @id = 'terms' or local-name() = 'terms' or (contains(*[local-name() = 'title'][1], 'Terms') and not(ancestor::*[local-name() = 'clause']))">terms</xsl:when>
 				<xsl:when test="ancestor::*[local-name() = 'foreword']"><xsl:value-of select="@type"/></xsl:when>
 				<xsl:otherwise><!-- <xsl:value-of select="@id"/> --></xsl:otherwise>
 			</xsl:choose>
@@ -1629,7 +1634,12 @@
 	
 	<xsl:template match="*[local-name() = 'xref'][normalize-space() != '' and string-length(normalize-space()) = string-length(translate(normalize-space(), '0123456789', '')) and not(contains(normalize-space(), 'Annex'))]" priority="2">
 		<named-content>
-			<xsl:attribute name="content-type">term</xsl:attribute>
+			<xsl:attribute name="content-type">
+				<xsl:choose>
+					<xsl:when test="starts-with(@target, 'abbrev')">abbrev</xsl:when>
+					<xsl:otherwise>term</xsl:otherwise>
+				</xsl:choose>
+			</xsl:attribute>
 			<xsl:attribute name="xlink:href">#<xsl:value-of select="@target"/></xsl:attribute>
 			<xsl:apply-templates />
 		</named-content>
@@ -2175,6 +2185,13 @@
 	
 	<xsl:template match="comment()[starts-with(., 'STS: ')]">
 		<xsl:value-of disable-output-escaping="yes" select="substring-after(., 'STS: ')"/>
+	</xsl:template>
+	
+	<xsl:template match="*[local-name() = 'indexsect']">
+		<sec sec-type="index">
+			<xsl:copy-of select="@id"/>
+			<xsl:apply-templates/>
+		</sec>
 	</xsl:template>
 	
 	<xsl:template name="getLevel">
