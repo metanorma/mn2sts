@@ -1866,12 +1866,17 @@
 				<xsl:apply-templates />
 			</table>
 			
+			<!-- move notes outside table -->
+			<xsl:if test="*[local-name() = 'note']">
+				<table-wrap-foot>
+					<xsl:for-each select="*[local-name() = 'note']">
+						<xsl:call-template name="note"/>
+					</xsl:for-each>
+				</table-wrap-foot>
+			</xsl:if>
 		<!-- </table-wrap> -->
     </xsl:element>
-		<!-- move notes outside table -->
-		<xsl:for-each select="*[local-name() = 'note']">
-			<xsl:call-template name="note"/>
-		</xsl:for-each>
+		
 	</xsl:template>
 
 	
