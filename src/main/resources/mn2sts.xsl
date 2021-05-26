@@ -30,11 +30,15 @@
 		</xsl:choose>
 	</xsl:variable>
 	
+	<xsl:variable name="nat_meta_only">
+		<xsl:if test="not(/*/*[local-name() = 'bibdata']/*[local-name() = 'relation'][@type = 'adopted-from']) and $organization = 'BSI'">true</xsl:if>
+	</xsl:variable>
+	
 	<!-- ====================================================================== -->
 	<!-- ====================================================================== -->
 	<xsl:variable name="elements_">
 		<elements>
-			<xsl:apply-templates select="/*/*[local-name() = 'preface']/node()" mode="elements"/>
+			<xsl:apply-templates select="/*/*[local-name() = 'preface']/*" mode="elements"/>
       
       <!-- Introduction in sections -->
       <xsl:apply-templates select="/*/*[local-name() = 'sections']/*[local-name() = 'clause'][@type='intro']" mode="elements"> <!-- [0] -->
@@ -105,6 +109,7 @@
 								$name = 'appendix' or
 								$name = 'bibitem' or
 								$name = 'clause' or
+								$name = 'introduction' or
 								$name = 'references' or
 								$name = 'terms' or
 								$name = 'definitions' or
@@ -246,7 +251,7 @@
 		</xsl:element>
 	</xsl:template>
 	
-	<!-- roor element, for example: iso-standard -->
+	<!-- root element, for example: iso-standard -->
 	<xsl:template match="/*">
 		
 		<standard xmlns:mml="http://www.w3.org/1998/Math/MathML" xmlns:tbx="urn:iso:std:iso:30042:ed-1" xmlns:xlink="http://www.w3.org/1999/xlink">
@@ -274,6 +279,7 @@
 					<xsl:choose>
 						<!-- If //bibdata/relation[@type = 'adopted-from'] exists -->
 						<xsl:when test="*[local-name() = 'bibdata']/*[local-name() = 'relation'][@type = 'adopted-from']">nat-meta</xsl:when>
+						<xsl:when test="$organization = 'BSI'">nat-meta</xsl:when>
 						<xsl:otherwise>iso-meta</xsl:otherwise>
 					</xsl:choose>
 				</xsl:variable>
@@ -288,8 +294,7 @@
 			
 			<xsl:if test="*[local-name() = 'sections'] or *[local-name() = 'bibliography']/*[local-name() = 'references'][@normative='true']">
 				<body>
-				
-					<xsl:if test="$organization = 'BSI'">
+					<xsl:if test="$nat_meta_only = 'true'"> <!-- $organization = 'BSI' -->
 						<xsl:apply-templates select="*[local-name() = 'preface']/*[local-name() = 'introduction']" mode="front_preface"> <!-- [0] -->
 							<xsl:with-param name="skipIntroduction">false</xsl:with-param>
 						</xsl:apply-templates>
@@ -942,11 +947,11 @@
 		<xsl:variable name="name" select="local-name()"/>
 		<xsl:choose>
 			<!-- For BSI, Introduction section placed in body -->
-			<xsl:when test="$skipIntroduction = 'true' and $name = 'introduction' and $organization = 'BSI'"></xsl:when>
+			<xsl:when test="$skipIntroduction = 'true' and $name = 'introduction' and $nat_meta_only = 'true'"></xsl:when> <!-- $organization = 'BSI' -->
 			<xsl:otherwise>
 				<xsl:variable name="sec_type">
 					<xsl:choose>
-						<xsl:when test="$name = 'introduction'">sec_intro</xsl:when>
+						<xsl:when test="$name = 'introduction'">intro</xsl:when>
 						<xsl:when test="$name = 'foreword'">foreword</xsl:when>
 						<xsl:when test="not(preceding-sibling::*) and $name != 'foreword'">titlepage</xsl:when>
 						<xsl:otherwise>sec_<xsl:value-of select="$name"/></xsl:otherwise>
@@ -962,6 +967,12 @@
 						</xsl:choose>
 					</xsl:attribute>
 					<xsl:attribute name="sec-type"><xsl:value-of select="$sec_type"/></xsl:attribute>
+					
+					<xsl:variable name="section" select="$elements//element[@source_id = current()/@id]/@section"/>
+					<xsl:if test="$section != ''">
+						<label><xsl:value-of select="$section"/></label>
+					</xsl:if>
+
 					<xsl:apply-templates />
 				</sec>
 			</xsl:otherwise>
