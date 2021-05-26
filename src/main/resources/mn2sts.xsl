@@ -10,7 +10,7 @@
 
 	<xsl:output version="1.0" method="xml" encoding="UTF-8" indent="yes"/>
 	
-	<xsl:key name="klang" match="*[local-name() = 'bibdata']/*[local-name() = 'title']" use="@language"/>
+	<!-- <xsl:key name="klang" match="*[local-name() = 'bibdata']/*[local-name() = 'title']" use="@language"/> -->
 
 	<xsl:param name="debug">false</xsl:param>
 	<xsl:param name="outputformat">NISO</xsl:param>
@@ -532,7 +532,7 @@
 				</doc-number>
 				
 				<!-- <part-number> -->
-				<xsl:variable name="part_ number">
+				<xsl:variable name="part_number">
 					<xsl:apply-templates select="*[local-name() = 'ext']/*[local-name() = 'structuredidentifier']/*[local-name() = 'partnumber']" mode="front"/>
 				</xsl:variable>
 				<xsl:if test="normalize-space($part_number) != ''">
@@ -713,7 +713,7 @@
 		</xsl:if>
 	</xsl:template>
 	
-	<xsl:template match="*[local-name() = 'bibdata']/*[local-name() = 'date']/*[local-name() = 'on']" mode="front">
+	<xsl:template match="*[local-name() = 'bibdata']/*[local-name() = 'date']/*[local-name() = 'on'] | *[local-name() = 'bibitem']/*[local-name() = 'date']/*[local-name() = 'on']" mode="front">
 		<xsl:choose>
 			<xsl:when test="position() = 1 and ../@type = 'published' and ../following-sibling::*[local-name() = 'date']/@type = 'published' ">
 				<pub-date>
@@ -760,7 +760,7 @@
 		<xsl:text disable-output-escaping="yes">--&gt;</xsl:text>
 	</xsl:template>
 	
-	<xsl:template match="*[local-name() = 'bibdata']/*[local-name() = 'relation']" mode="front">
+	<xsl:template match="*[local-name() = 'bibdata' or local-name() = 'bibitem']/*[local-name() = 'relation']" mode="front">
 		<!--
 		<relation xmlns="https://www.metanorma.org/ns/iso" type="informativelyReferences">
 			<bibitem>BS EN ISO 19011:2018</bibitem>
@@ -777,7 +777,7 @@
 		</std-xref>
 	</xsl:template>
 	
-	<xsl:template match="*[local-name() = 'bibdata']/*[local-name() = 'relation'][@type != 'adopted-from']/*[local-name() = 'bibitem']" mode="front">
+	<xsl:template match="*[local-name() = 'bibdata' or local-name() = 'bibitem']/*[local-name() = 'relation'][@type != 'adopted-from']/*[local-name() = 'bibitem']" mode="front">
 		<std-ref>
 			<xsl:copy-of select="@*"/>
 			<xsl:attribute name="type">
@@ -946,11 +946,22 @@
 			<xsl:otherwise>
 				<xsl:variable name="sec_type">
 					<xsl:choose>
-						<xsl:when test="$name = 'introduction'">intro</xsl:when>
-						<xsl:otherwise><xsl:value-of select="$name"/></xsl:otherwise>
+						<xsl:when test="$name = 'introduction'">sec_intro</xsl:when>
+						<xsl:when test="$name = 'foreword'">foreword</xsl:when>
+						<xsl:when test="not(preceding-sibling::*) and $name != 'foreword'">titlepage</xsl:when>
+						<xsl:otherwise>sec_<xsl:value-of select="$name"/></xsl:otherwise>
 					</xsl:choose>
 				</xsl:variable>
-				<sec id="sec_{$sec_type}" sec-type="{$sec_type}">
+				<sec>
+					<xsl:attribute name="id">
+						<xsl:choose>
+							<xsl:when test="@id"><xsl:value-of select="@id"/></xsl:when>
+							<xsl:otherwise>
+								<xsl:value-of select="$sec_type"/>
+							</xsl:otherwise>
+						</xsl:choose>
+					</xsl:attribute>
+					<xsl:attribute name="sec-type"><xsl:value-of select="$sec_type"/></xsl:attribute>
 					<xsl:apply-templates />
 				</sec>
 			</xsl:otherwise>
