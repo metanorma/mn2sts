@@ -252,7 +252,36 @@
 		<standard xmlns:mml="http://www.w3.org/1998/Math/MathML" xmlns:tbx="urn:iso:std:iso:30042:ed-1" xmlns:xlink="http://www.w3.org/1999/xlink">
 			
 			<front>
-				<xsl:apply-templates select="*[local-name() = 'bibdata']" mode="front"/>
+				<xsl:for-each select="*[local-name() = 'bibdata']/*[local-name() = 'relation'][@type = 'adopted-from']">
+				
+					<xsl:variable name="element_name">
+						<xsl:variable name="adopted_from_abbreviation" select="*[local-name() = 'bibitem']/*[local-name() = 'contributor'][*[local-name() = 'role']/@type='publisher']/*[local-name() = 'organization']/*[local-name() = 'abbreviation']" />
+						<xsl:choose>
+							<!-- If //bibdata//relation[@type = 'adopted-from']/bibitem/contributor[role/@type = 'publisher']/organization[abbreviation = 'xxx'] exists, where xxx = ISO or IEC, -->
+							<xsl:when test="$adopted_from_abbreviation = 'ISO' or $adopted_from_abbreviation = 'IEC'">iso-meta</xsl:when>
+							<!-- If //bibdata//relation[@type = 'adopted-from']/bibitem/contributor[role/@type = 'publisher']/organization[abbreviation = 'xxx'] exists, where xxx = CEN or CENELEC, -->
+							<xsl:when test="$adopted_from_abbreviation = 'CEN' or $adopted_from_abbreviation = 'CENELEC'">reg-meta</xsl:when>
+							<xsl:otherwise>std-meta</xsl:otherwise>
+						</xsl:choose>
+					</xsl:variable>
+					
+					<xsl:apply-templates select="*[local-name() = 'bibitem']" mode="front">
+						<xsl:with-param name="element_name" select="$element_name"/>
+					</xsl:apply-templates>
+				</xsl:for-each>
+				
+				<xsl:variable name="element_name">
+					<xsl:choose>
+						<!-- If //bibdata/relation[@type = 'adopted-from'] exists -->
+						<xsl:when test="*[local-name() = 'bibdata']/*[local-name() = 'relation'][@type = 'adopted-from']">nat-meta</xsl:when>
+						<xsl:otherwise>iso-meta</xsl:otherwise>
+					</xsl:choose>
+				</xsl:variable>
+				
+				<xsl:apply-templates select="*[local-name() = 'bibdata']" mode="front">
+					<xsl:with-param name="element_name" select="$element_name"/>
+				</xsl:apply-templates>
+				
 				<xsl:apply-templates select="*[local-name() = 'preface']" mode="front_preface"/>
 			</front>
 			
@@ -329,41 +358,93 @@
 	<xsl:template match="*[local-name() = 'annex']"/>
 	<xsl:template match="*[local-name() = 'bibliography']"/>
 	
-	<xsl:template match="*[local-name() = 'bibdata']" mode="front">
-		<xsl:variable name="element_name">
-			<xsl:choose>
-				<xsl:when test="$organization = 'BSI'">nat-meta</xsl:when>
-				<xsl:otherwise>iso-meta</xsl:otherwise>
-			</xsl:choose>
-		</xsl:variable>
+	<xsl:template match="*[local-name() = 'bibdata'] | *[local-name() = 'bibdata']/*[local-name() = 'relation'][@type = 'adopted-from']/*[local-name() = 'bibitem']" mode="front">
+		<xsl:param name="element_name"/>
+		
 		<!-- <iso-meta> -->
 		<xsl:element name="{$element_name}">
-			<xsl:if test="$organization = 'BSI'">
-				<xsl:attribute name="originator">BSI</xsl:attribute>
+			<xsl:if test="$element_name != 'iso-meta'">
+				<xsl:attribute name="originator">
+					<xsl:variable name="abbrev" select="*[local-name() = 'contributor'][*[local-name() = 'role']/@type='publisher']/*[local-name() = 'organization']/*[local-name() = 'abbreviation']"/>
+					<xsl:choose>
+						<xsl:when test="starts-with($abbrev, 'BS')">BSI</xsl:when>
+						<xsl:when test="starts-with($abbrev, 'CEN')">CEN</xsl:when>
+						<xsl:otherwise><xsl:value-of select="$abbrev"/></xsl:otherwise>
+					</xsl:choose>
+				</xsl:attribute>
 			</xsl:if>
-			<xsl:for-each select="*[local-name() = 'title'][generate-id(.)=generate-id(key('klang',@language)[1])]">
+			
+			<xsl:variable name="bibdata"><xsl:copy-of select="."/></xsl:variable>
+			
+			<!-- get unique languages from element title -->
+			<xsl:variable name="languages">
+				<xsl:for-each select="*[local-name() = 'title']">
+					<xsl:if test="not(preceding-sibling::*/@language = current()/@language)">
+						<item language="{@language}"/>
+					</xsl:if>
+				</xsl:for-each>
+			</xsl:variable>
+			
+			<!-- <xsl:for-each select="*[local-name() = 'title'][generate-id(.)=generate-id(key('klang',@language)[1])]"> -->
+			<xsl:for-each select="xalan:nodeset($languages)/*">
 				<title-wrap xml:lang="{@language}">
 				
-					<xsl:variable name="title-intro">
-						 <xsl:apply-templates select="/*/*[local-name() = 'bibdata']/*[local-name() = 'title'][@language = current()/@language and @type = 'title-intro']" mode="front"/>
-					</xsl:variable>
-					<xsl:if test="normalize-space($title-intro) != ''">
-						<intro><xsl:copy-of select="$title-intro"/></intro>
-					</xsl:if>
-					
-					<xsl:variable name="title-main">					
-						<xsl:apply-templates select="/*/*[local-name() = 'bibdata']/*[local-name() = 'title'][@language = current()/@language and @type = 'title-main']" mode="front"/>
-					</xsl:variable>
-					<main><xsl:copy-of select="$title-main"/></main>
-					
-					<xsl:variable name="title-amd">
-						<xsl:apply-templates select="/*/*[local-name() = 'bibdata']/*[local-name() = 'title'][@language = current()/@language and @type = 'title-amd']" mode="front"/>
-					</xsl:variable>
-					
-					<xsl:variable name="title-part">
-						<xsl:apply-templates select="/*/*[local-name() = 'bibdata']/*[local-name() = 'title'][@language = current()/@language and @type = 'title-part']" mode="front"/>
-					</xsl:variable>
-					<xsl:if test="normalize-space($title-part) != ''">
+					<xsl:variable name="titles-components">
+						<xsl:variable name="title-intro">
+							 <!-- <xsl:apply-templates select="/*/*[local-name() = 'bibdata']/*[local-name() = 'title'][@language = current()/@language and @type = 'title-intro']" mode="front"/> -->
+							 <xsl:apply-templates select="xalan:nodeset($bibdata)/*/*[local-name() = 'title'][@language = current()/@language and @type = 'title-intro']" mode="front"/>
+						</xsl:variable>
+						
+						<xsl:variable name="title-main">					
+							<!-- <xsl:apply-templates select="/*/*[local-name() = 'bibdata']/*[local-name() = 'title'][@language = current()/@language and @type = 'title-main']" mode="front"/> -->
+							<xsl:apply-templates select="xalan:nodeset($bibdata)/*/*[local-name() = 'title'][@language = current()/@language and @type = 'title-main']" mode="front"/>
+						</xsl:variable>
+						
+						<xsl:choose>
+							<xsl:when test="normalize-space($title-main) = '' and normalize-space($title-intro) != ''">
+								<main>
+									<xsl:copy-of select="$title-intro"/>
+								</main>
+							</xsl:when>
+							<xsl:otherwise>
+								<intro><xsl:copy-of select="$title-intro"/></intro>
+								<main><xsl:copy-of select="$title-main"/></main>
+							</xsl:otherwise>
+						</xsl:choose>
+						
+						<xsl:variable name="title-amd">
+							<!-- <xsl:apply-templates select="/*/*[local-name() = 'bibdata']/*[local-name() = 'title'][@language = current()/@language and @type = 'title-amd']" mode="front"/> -->
+							<xsl:apply-templates select="xalan:nodeset($bibdata)/*/*[local-name() = 'title'][@language = current()/@language and @type = 'title-amd']" mode="front"/>
+						</xsl:variable>
+						
+						<xsl:variable name="title-part">
+							<!-- <xsl:apply-templates select="/*/*[local-name() = 'bibdata']/*[local-name() = 'title'][@language = current()/@language and @type = 'title-part']" mode="front"/> -->
+							<xsl:apply-templates select="xalan:nodeset($bibdata)/*/*[local-name() = 'title'][@language = current()/@language and @type = 'title-part']" mode="front"/>
+						</xsl:variable>
+						
+						<xsl:variable name="part">
+							<!-- <xsl:apply-templates select="/*/*[local-name() = 'bibdata']/*[local-name() = 'ext']/*[local-name() = 'structuredidentifier']/*[local-name() = 'project-number']/@part" mode="front"/> -->
+							<xsl:apply-templates select="xalan:nodeset($bibdata)/*/*[local-name() = 'ext']/*[local-name() = 'structuredidentifier']/*[local-name() = 'project-number']/@part" mode="front"/>
+						</xsl:variable>
+						<part>
+							<xsl:if test="local-name() = 'compl' and $part != ''">
+								<xsl:choose>
+									<xsl:when test="current()/@language = 'en'"><xsl:text>Part </xsl:text></xsl:when>
+									<xsl:when test="current()/@language = 'fr'"><xsl:text>Partie </xsl:text></xsl:when>
+								</xsl:choose>
+								<xsl:value-of select="$part"/>
+								<xsl:choose>
+									<xsl:when test="normalize-space($title-part) = ''">
+										<xsl:text>. </xsl:text>
+									</xsl:when>
+									<xsl:otherwise>
+										<xsl:text>: </xsl:text>
+									</xsl:otherwise>
+								</xsl:choose>
+							</xsl:if>
+						</part>
+						
+						<!-- <xsl:if test="normalize-space($title-part) != ''"> -->
 						<compl>
 							<xsl:copy-of select="$title-part"/>
 							<xsl:if test="normalize-space($title-amd) != ''">
@@ -373,19 +454,30 @@
 								<xsl:copy-of select="$title-amd"/>
 							</xsl:if>
 						</compl>
-					</xsl:if>
-					
-					<xsl:variable name="part">
-						<xsl:apply-templates select="/*/*[local-name() = 'bibdata']/*[local-name() = 'ext']/*[local-name() = 'structuredidentifier']/*[local-name() = 'project-number']/@part" mode="front"/>
+						<!-- </xsl:if> -->
+						
+						
 					</xsl:variable>
+				
 					
+					<xsl:for-each select="xalan:nodeset($titles-components)/*[normalize-space() != '' and not(local-name() = 'part')]">
+						<xsl:copy-of select="."/>
+					</xsl:for-each>
 
 					<xsl:variable name="full-title">
-						<xsl:if test="normalize-space($title-intro) != ''">
+						<!-- <xsl:if test="normalize-space($title-intro) != ''">
 							<xsl:copy-of select="$title-intro"/>
 							<xsl:text> — </xsl:text>
-						</xsl:if>
-						<xsl:copy-of select="$title-main"/>
+						</xsl:if> -->
+						
+						<xsl:for-each select="xalan:nodeset($titles-components)/*[normalize-space() != '']">
+							<xsl:value-of select="."/>
+							<xsl:if test="normalize-space() != '' and position() != last()">
+								<xsl:text> — </xsl:text>
+							</xsl:if>
+						</xsl:for-each>
+						
+						<!-- <xsl:copy-of select="$title-main"/>
 						<xsl:if test="normalize-space($title-part) != ''">
 							<xsl:if test="$part != ''">
 								<xsl:text> — </xsl:text>
@@ -400,11 +492,13 @@
 							<xsl:copy-of select="$title-part"/>
 						</xsl:if>
 						<xsl:if test="normalize-space($title-amd) != ''">
-							<xsl:text> — </xsl:text>
 							<xsl:copy-of select="$title-amd"/>
-						</xsl:if>
+						</xsl:if> -->
+						
 					</xsl:variable>
 					<full><xsl:copy-of select="$full-title"/></full>
+					
+					
 				</title-wrap>
 			</xsl:for-each>
 			
@@ -438,9 +532,14 @@
 				</doc-number>
 				
 				<!-- <part-number> -->
-				<part-number>
-				<xsl:apply-templates select="*[local-name() = 'ext']/*[local-name() = 'structuredidentifier']/*[local-name() = 'partnumber']" mode="front"/>
-				</part-number>
+				<xsl:variable name="part_ number">
+					<xsl:apply-templates select="*[local-name() = 'ext']/*[local-name() = 'structuredidentifier']/*[local-name() = 'partnumber']" mode="front"/>
+				</xsl:variable>
+				<xsl:if test="normalize-space($part_number) != ''">
+					<part-number>
+						<xsl:value-of select="$part_number"/>
+					</part-number>
+				</xsl:if>
 				
 				<edition>
 					<xsl:apply-templates select="*[local-name() = 'edition']" mode="front"/>
@@ -521,7 +620,8 @@
 			<xsl:apply-templates select="*[local-name() = 'ext']/*[local-name() = 'ics']/*[local-name() = 'code']" mode="front"/>
 			
 			<!-- std-xref -->
-			<xsl:apply-templates select="*[local-name() = 'relation']" mode="front" />
+			<!-- ignoring all instances of .//relation[@type = 'adopted-from']/bibitem -->
+			<xsl:apply-templates select="*[local-name() = 'relation'][@type != 'adopted-from']" mode="front" /><!-- adopted-from -> to standalone xxx-meta -->
 			
 			
 			<permissions>
@@ -554,15 +654,18 @@
 				</custom-meta-group>
 			</xsl:if>
 			
-			<!-- check non-processed elements in bibdata -->
-			<xsl:variable name="front_check">
-				<xsl:apply-templates mode="front_check"/>
-			</xsl:variable>			
-			<xsl:if test="normalize-space($front_check) != '' or count(xalan:nodeset($front_check)/*) &gt; 0">
-				<xsl:text>WARNING! There are unprocessed elements in bibdata:&#xa;</xsl:text>
-				<xsl:text>===================================&#xa;</xsl:text>
-				<xsl:apply-templates select="xalan:nodeset($front_check)" mode="display_check"/>
-				<xsl:text>&#xa;===================================&#xa;</xsl:text>
+			<xsl:if test="local-name() = 'bibdata'">
+				<!-- check non-processed elements in bibdata -->
+				<xsl:variable name="front_check">
+					<xsl:apply-templates mode="front_check"/>
+				</xsl:variable>
+
+				<xsl:if test="normalize-space($front_check) != '' or count(xalan:nodeset($front_check)/*) &gt; 0">
+					<xsl:text>WARNING! There are unprocessed elements in bibdata:&#xa;</xsl:text>
+					<xsl:text>===================================&#xa;</xsl:text>
+					<xsl:apply-templates select="xalan:nodeset($front_check)" mode="display_check"/>
+					<xsl:text>&#xa;===================================&#xa;</xsl:text>
+				</xsl:if>
 			</xsl:if>
 		<!-- </iso-meta> -->
 		</xsl:element>
@@ -674,7 +777,7 @@
 		</std-xref>
 	</xsl:template>
 	
-	<xsl:template match="*[local-name() = 'bibdata']/*[local-name() = 'relation']/*[local-name() = 'bibitem']" mode="front">
+	<xsl:template match="*[local-name() = 'bibdata']/*[local-name() = 'relation'][@type != 'adopted-from']/*[local-name() = 'bibitem']" mode="front">
 		<std-ref>
 			<xsl:copy-of select="@*"/>
 			<xsl:attribute name="type">
@@ -1630,12 +1733,12 @@
 	</xsl:template>
 	
 	
-	<xsl:template match="*[local-name() = 'th'][*[local-name() = 'strong']][*[local-name() = 'br']]/node()[1][self::text()]">
+	<xsl:template match="*[local-name() = 'th'][*[local-name() = 'strong']][*[local-name() = 'br'][parent::*[local-name() = 'strong']]]/node()[1][self::text()]">
 		<xsl:text disable-output-escaping="yes">&lt;bold&gt;</xsl:text>
 		<xsl:value-of select="."/>
 	</xsl:template>
 	
-	<xsl:template match="*[local-name() = 'th'][*[local-name() = 'strong']]/*[local-name() = 'br']">
+	<xsl:template match="*[local-name() = 'th'][*[local-name() = 'strong']]/*[local-name() = 'br'][parent::*[local-name() = 'strong']]">
 		<xsl:text disable-output-escaping="yes">&lt;/bold&gt;</xsl:text>
 		<break/>
 		<xsl:text disable-output-escaping="yes">&lt;bold&gt;</xsl:text>
