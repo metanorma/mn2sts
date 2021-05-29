@@ -125,6 +125,11 @@ public class mn2stsTests {
         assertTrue(systemOutRule.getLog().contains("is valid"));
     }
     
+    @Test
+    public void regexHelperText() {
+        String res = RegExHelper.matches("^.*:\\d{4}\\D.*$", "PD 6079-4:2006 (Book)");
+        assertTrue(res.equals("true"));
+    }
     /*@Test
     public void successCheckXSD() throws ParseException {
         ClassLoader classLoader = getClass().getClassLoader();        
