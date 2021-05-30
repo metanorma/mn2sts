@@ -599,8 +599,13 @@
 				</xsl:otherwise>
 			</xsl:choose>
 			
+			<xsl:variable name="related_comm_ref" select="*[local-name() = 'relation'][@type='related']/*[local-name() = 'bibitem']/*[local-name() = 'docidentifier']"/>
+			<xsl:variable name="related_comm_ref_text">Committee reference</xsl:variable>
 			<comm-ref>
 				<xsl:choose>
+					<xsl:when test="$organization = 'BSI' and starts-with($related_comm_ref, $related_comm_ref_text)">
+						<xsl:value-of select="normalize-space(substring-after($related_comm_ref, $related_comm_ref_text))"/>
+					</xsl:when>
 					<xsl:when test="*[local-name() = 'ext']/*[local-name() = 'editorialgroup']/*[local-name() = 'technical-committee'] and not(
 						*[local-name() = 'ext']/*[local-name() = 'editorialgroup']/*[local-name() = 'subcommittee'] and 
 						*[local-name() = 'ext']/*[local-name() = 'editorialgroup']/*[local-name() = 'workgroup'] )">
@@ -627,7 +632,7 @@
 			
 			<!-- std-xref -->
 			<!-- ignoring all instances of .//relation[@type = 'adopted-from']/bibitem -->
-			<xsl:apply-templates select="*[local-name() = 'relation'][@type != 'adopted-from']" mode="front" /><!-- adopted-from -> to standalone xxx-meta -->
+			<xsl:apply-templates select="*[local-name() = 'relation'][@type != 'adopted-from' and @type != 'related']" mode="front" /><!-- adopted-from -> to standalone xxx-meta , related -> comm-ref  -->
 			
 			
 			<permissions>
