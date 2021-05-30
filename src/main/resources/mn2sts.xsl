@@ -634,6 +634,8 @@
 			<!-- ignoring all instances of .//relation[@type = 'adopted-from']/bibitem -->
 			<xsl:apply-templates select="*[local-name() = 'relation'][@type != 'adopted-from' and @type != 'related']" mode="front" /><!-- adopted-from -> to standalone xxx-meta , related -> comm-ref  -->
 			
+			<xsl:apply-templates select="*[local-name() = 'relation'][@type = 'related'][starts-with(*[local-name() = 'bibitem']/*[local-name() = 'docidentifier'], 'Draft for comment')]" mode="front" />
+			
 			
 			<permissions>
 				<!-- <copyright-statement>All rights reserved</copyright-statement> -->
@@ -772,21 +774,54 @@
 	</xsl:template>
 	
 	<xsl:template match="*[local-name() = 'bibdata' or local-name() = 'bibitem']/*[local-name() = 'relation']" mode="front">
-		<!--
-		<relation xmlns="https://www.metanorma.org/ns/iso" type="informativelyReferences">
-			<bibitem>BS EN ISO 19011:2018</bibitem>
-		</relation>
-		-->
-		<!--
-		<std-xref type="informativelyReferences">
-			<std-ref type="dated">BS EN ISO 19011:2018</std-ref>
-		</std-xref>
-		-->
-		<std-xref>
-			<xsl:copy-of select="@*"/>
-			<xsl:apply-templates mode="front"/>
-		</std-xref>
+		<xsl:variable name="value" select="*[local-name() = 'bibitem']/*[local-name() = 'docidentifier']"/>
+		<xsl:variable name="draft_comment_text">Draft for comment</xsl:variable>
+		<xsl:choose>
+			<xsl:when test="@type = 'related' and starts-with($value, $draft_comment_text)">
+				<!--
+					<relation type="related">
+						<bibitem>
+						<title> </title>
+						<docidentifier>Draft for comment 20/30387670 DC</docidentifier>
+						</bibitem>
+						</relation>
+					-->
+					<!--
+					<std-xref type="isPublishedFormatOf">
+						<std-ref type="undated">20/30387670 DC</std-ref>
+					</std-xref>
+					-->
+					<std-xref type="isPublishedFormatOf">
+						<std-ref>
+							<xsl:attribute name="type">
+								<xsl:call-template name="setDatedUndatedType">
+									<xsl:with-param name="value" select="$value"/>
+								</xsl:call-template>
+							</xsl:attribute>
+							<xsl:value-of select="normalize-space(substring-after($value, $draft_comment_text))"/>
+						</std-ref>
+					</std-xref>
+			</xsl:when>
+			<xsl:otherwise>			
+				<!--
+				<relation xmlns="https://www.metanorma.org/ns/iso" type="informativelyReferences">
+					<bibitem>BS EN ISO 19011:2018</bibitem>
+				</relation>
+				-->
+				<!--
+				<std-xref type="informativelyReferences">
+					<std-ref type="dated">BS EN ISO 19011:2018</std-ref>
+				</std-xref>
+				-->
+				<std-xref>
+					<xsl:copy-of select="@*"/>
+					<xsl:apply-templates mode="front"/>
+				</std-xref>
+			</xsl:otherwise>
+		</xsl:choose>
 	</xsl:template>
+	
+	
 	
 	<xsl:template match="*[local-name() = 'bibdata' or local-name() = 'bibitem']/*[local-name() = 'relation'][@type != 'adopted-from']/*[local-name() = 'bibitem']" mode="front">
 		<std-ref>
