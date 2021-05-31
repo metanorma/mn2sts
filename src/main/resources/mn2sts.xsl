@@ -25,7 +25,7 @@
 	
 	<xsl:variable name="organization">
 		<xsl:choose>
-			<xsl:when test="$organization_abbreviation = 'BSI' or $organization_name = 'The British Standards Institution'">BSI</xsl:when>
+			<xsl:when test="$organization_abbreviation = 'BSI' or $organization_name = 'The British Standards Institution' or $organization_name = 'British Standards Institution'">BSI</xsl:when>
 			<xsl:when test="$organization_abbreviation != ''"><xsl:value-of select="$organization_abbreviation"/></xsl:when>
 			<xsl:when test="$organization_name != ''"><xsl:value-of select="$organization_name"/></xsl:when>
 		</xsl:choose>
@@ -185,6 +185,7 @@
 						<xsl:variable name="_name" select="substring-before(*[local-name() = 'name'], '&#8212; ')"/>
 						<xsl:value-of select="translate(normalize-space(translate($_name, '&#xa0;', ' ')), ' ', '&#xa0;')"/>
 					</xsl:when>
+					<xsl:when test="(local-name() = 'table' or local-name() = 'figure') and not(contains(*[local-name() = 'name'], '&#8212; '))"/>
 					<xsl:when test="$section_ = '0' and not(@type='intro')"></xsl:when>
 					<xsl:otherwise>
 						<xsl:choose>
@@ -275,7 +276,7 @@
 						<xsl:with-param name="element_name" select="$element_name"/>
 					</xsl:apply-templates>
 				</xsl:for-each>
-				
+
 				<xsl:variable name="element_name">
 					<xsl:choose>
 						<!-- If //bibdata/relation[@type = 'adopted-from'] exists -->
@@ -1209,9 +1210,9 @@
 		<xsl:apply-templates />
 	</xsl:template>
 	
-	<xsl:template match="*[local-name() = 'bibitem']/*[local-name() = 'note'] | *[local-name() = 'fn'] " priority="2">
+	<xsl:template match="*[local-name() = 'bibitem']/*[local-name() = 'note']" priority="2">
 		<xsl:variable name="number">
-			<xsl:number level="any" count="*[local-name() = 'bibitem']/*[local-name() = 'note'] | *[local-name() = 'fn']"/>
+			<xsl:number level="any" count="*[local-name() = 'bibitem']/*[local-name() = 'note']"/>
 		</xsl:variable>
 		
 		<xsl:variable name="xref_fn">
@@ -1222,14 +1223,28 @@
 				<label>
 					<sup><xsl:value-of select="$number"/></sup>
 				</label>
-				<xsl:choose>
-					<xsl:when test="local-name() = 'fn'">
-						<xsl:apply-templates/>
-					</xsl:when>
-					<xsl:otherwise>
-						<p><xsl:apply-templates/></p>
-					</xsl:otherwise>
-				</xsl:choose>
+				<p><xsl:apply-templates/></p>
+			</fn>
+		</xsl:variable>
+
+		<xsl:copy-of select="$xref_fn"/>
+		
+	</xsl:template>
+	
+	<xsl:template match="*[local-name() = 'fn'] " priority="2">
+		<xsl:variable name="number" select="@reference"/>
+			<!-- <xsl:number level="any" count="*[local-name() = 'fn']"/>
+		</xsl:variable> -->
+		
+		<xsl:variable name="xref_fn">
+			<xref ref-type="fn" rid="fn_{$number}"> <!-- rid="fn_{$number}" -->
+				<sup><xsl:value-of select="$number"/>)</sup>
+			</xref>
+			<fn id="fn_{$number}">
+				<label>
+					<sup><xsl:value-of select="$number"/>)</sup>
+				</label>
+				<xsl:apply-templates/>
 			</fn>
 		</xsl:variable>
 		
@@ -1246,6 +1261,7 @@
 		</xsl:choose>		
 		
 	</xsl:template>
+	
 	
 	<xsl:template match="*[local-name() = 'fn']/text()" priority="2">
 		<xsl:if test="normalize-space(.) != ''">
@@ -1837,7 +1853,7 @@
 			</xsl:choose>
 		</xsl:variable>
 		<!-- parent=<xsl:value-of select="$parent"/> -->
-		<xref > <!-- ref-type="{$ref_type}" rid="{$id}" --> <!-- replaced by xsl:attribute name=... for save ordering -->
+		<xref> <!-- ref-type="{$ref_type}" rid="{$id}" --> <!-- replaced by xsl:attribute name=... for save ordering -->
       <xsl:attribute name="ref-type">
         <xsl:value-of select="$ref_type"/>
       </xsl:attribute>
