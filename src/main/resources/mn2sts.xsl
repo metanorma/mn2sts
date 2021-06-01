@@ -540,7 +540,7 @@
 				
 				<!-- <part-number> -->
 				<xsl:variable name="part_number">
-					<xsl:apply-templates select="*[local-name() = 'ext']/*[local-name() = 'structuredidentifier']/*[local-name() = 'partnumber']" mode="front"/>
+					<xsl:apply-templates select="*[local-name() = 'ext']/*[local-name() = 'structuredidentifier']/*[local-name() = 'partnumber'] | *[local-name() = 'ext']/*[local-name() = 'structuredidentifier']/*[local-name() = 'project-number']/@part" mode="front"/>
 				</xsl:variable>
 				<xsl:if test="normalize-space($part_number) != ''">
 					<part-number>
@@ -579,7 +579,7 @@
 			<!-- <release-date> -->
 			<xsl:variable name="release-date">
 				<dates>
-					<xsl:apply-templates select="*[local-name() = 'date']/*[local-name() = 'on']" mode="front"/>
+					<xsl:apply-templates select="*[local-name() = 'date'][@type='release']/*[local-name() = 'on']" mode="front"/>
 				</dates>
 			</xsl:variable>
 			
@@ -727,8 +727,14 @@
 		</xsl:if>
 	</xsl:template>
 	
+	
 	<xsl:template match="*[local-name() = 'bibdata']/*[local-name() = 'date']/*[local-name() = 'on'] | *[local-name() = 'bibitem']/*[local-name() = 'date']/*[local-name() = 'on']" mode="front">
 		<xsl:choose>
+			<xsl:when test="../@type = 'release'">
+				<release-date>
+					<xsl:value-of select="."/>
+				</release-date>
+			</xsl:when>
 			<xsl:when test="position() = 1 and ../@type = 'published' and ../following-sibling::*[local-name() = 'date']/@type = 'published' ">
 				<pub-date>
 					<xsl:if test="$organization = 'BSI'">
