@@ -290,6 +290,8 @@
 					<xsl:with-param name="element_name" select="$element_name"/>
 				</xsl:apply-templates>
 				
+				<xsl:call-template name="insert_publication_info"/>
+				
 				<xsl:apply-templates select="*[local-name() = 'preface']" mode="front_preface"/>
 			</front>
 			
@@ -364,6 +366,59 @@
 	<xsl:template match="*[local-name() = 'preface']"/>
 	<xsl:template match="*[local-name() = 'annex']"/>
 	<xsl:template match="*[local-name() = 'bibliography']"/>
+	
+	<!-- ================================== -->
+	<!-- Publishing and copyright information block -->
+	<!-- ================================== -->
+	<xsl:template name="insert_publication_info">
+			<sec id="sec_pub_info_nat" sec-type="publication_info">
+				<xsl:apply-templates select="*[local-name() = 'boilerplate']/*[local-name() = 'copyright-statement']/*" mode="publication_info"/>
+				<xsl:apply-templates select="*[local-name() = 'bibdata']/*[local-name() = 'docidentifier'][@type = 'ISBN']" mode="publication_info"/>
+				
+				<xsl:if test="*[local-name() = 'bibdata']/*[local-name() = 'ext']/*[local-name() = 'ics']">
+					<p><xsl:text>ICS </xsl:text>
+						<xsl:for-each select="*[local-name() = 'bibdata']/*[local-name() = 'ext']/*[local-name() = 'ics']">
+							<xsl:sort />
+							<xsl:value-of select="normalize-space()"/>
+							<xsl:if test="position() != last()">; </xsl:if>
+						</xsl:for-each>
+					</p>
+				</xsl:if>
+				
+				<xsl:apply-templates select="*[local-name() = 'preface']/*[local-name() = 'clause'][@type = 'related-refs']"  mode="publication_info"/>
+				
+				<xsl:apply-templates select="*[local-name() = 'preface']/*[local-name() = 'clause'][@type = 'corrigenda']"  mode="publication_info"/>
+				
+			</sec>
+		</xsl:template>
+	
+	<xsl:template match="*[local-name() = 'title']" mode="publication_info">
+		<xsl:call-template name="title"/>
+	</xsl:template>
+	
+	<xsl:template match="*[local-name() = 'p']" mode="publication_info">
+		<xsl:call-template name="p"/>
+	</xsl:template>
+	
+	<xsl:template match="*[local-name() = 'bibdata']/*[local-name() = 'docidentifier'][@type = 'ISBN']" mode="publication_info">
+		<p>ISBN <xsl:apply-templates /></p>
+	</xsl:template>
+	
+	<xsl:template match="*[local-name() = 'preface']/*[local-name() = 'clause'][@type = 'related-refs']" priority="2" mode="front_preface"/>
+	<xsl:template match="*[local-name() = 'preface']/*[local-name() = 'clause'][@type = 'related-refs']"  mode="publication_info">
+		<xsl:apply-templates />
+	</xsl:template>
+	
+	<xsl:template match="*[local-name() = 'preface']/*[local-name() = 'clause'][@type = 'corrigenda']" priority="2" mode="front_preface"/>
+	<xsl:template match="*[local-name() = 'preface']/*[local-name() = 'clause'][@type = 'corrigenda']"  mode="publication_info">
+		<sec>
+			<xsl:copy-of select="@id"/>
+			<xsl:apply-templates />
+		</sec>
+	</xsl:template>
+	<!-- ================================== -->
+	<!-- END Publishing and copyright information block -->
+	<!-- ================================== -->
 	
 	<xsl:template match="*[local-name() = 'bibdata'] | *[local-name() = 'bibdata']/*[local-name() = 'relation'][@type = 'adopted-from']/*[local-name() = 'bibitem']" mode="front">
 		<xsl:param name="element_name"/>
@@ -2309,7 +2364,7 @@
 		</xsl:attribute>
 	</xsl:template>
 	
-	<xsl:template match="*[local-name() = 'title']">
+	<xsl:template match="*[local-name() = 'title']" name="title">
 		<xsl:choose>
 			<xsl:when test="not(*[local-name() = 'tab']) and normalize-space(translate(., '0123456789.', '')) = ''"><!-- put number in label, see above --></xsl:when>
 			<xsl:otherwise>
