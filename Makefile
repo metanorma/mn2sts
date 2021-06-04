@@ -1,5 +1,9 @@
 #!make
-SHELL ?= /bin/bash
+ifeq ($(OS),Windows_NT)
+SHELL := cmd
+else
+SHELL := /bin/bash
+endif
 
 JAR_VERSION := $(shell mvn -q -Dexec.executable="echo" -Dexec.args='$${project.version}' --non-recursive exec:exec -DforceStdout)
 JAR_FILE := mn2sts-$(JAR_VERSION).jar
