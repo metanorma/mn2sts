@@ -1294,16 +1294,17 @@
 	
 	<xsl:template match="*[local-name() = 'fn'] " priority="2">
 		<xsl:variable name="number" select="@reference"/>
-			<!-- <xsl:number level="any" count="*[local-name() = 'fn']"/>
-		</xsl:variable> -->
+		<xsl:variable name="number_id">
+			<xsl:value-of select="$number"/>_<xsl:number level="any" count="*[local-name() = 'fn']"/>
+		</xsl:variable>
 		<xsl:variable name="sfx">
 			<xsl:if test="ancestor::*[local-name() = 'table']"><xsl:value-of select="ancestor::*[local-name() = 'table'][1]/@id"/>_</xsl:if>
 			</xsl:variable>
 		<xsl:variable name="xref_fn">
-			<xref ref-type="fn" rid="fn_{$sfx}{$number}"> <!-- rid="fn_{$number}" -->
+			<xref ref-type="fn" rid="fn_{$number_id}"> <!-- {$sfx} rid="fn_{$number}" -->
 				<sup><xsl:value-of select="$number"/>)</sup>
 			</xref>
-			<fn id="fn_{$sfx}{$number}">
+			<fn id="fn_{$number_id}"> <!-- {$sfx} -->
 				<label>
 					<sup><xsl:value-of select="$number"/>)</sup>
 				</label>
