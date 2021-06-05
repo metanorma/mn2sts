@@ -1296,12 +1296,14 @@
 		<xsl:variable name="number" select="@reference"/>
 			<!-- <xsl:number level="any" count="*[local-name() = 'fn']"/>
 		</xsl:variable> -->
-		
+		<xsl:variable name="sfx">
+			<xsl:if test="ancestor::*[local-name() = 'table']"><xsl:value-of select="ancestor::*[local-name() = 'table'][1]/@id"/>_</xsl:if>
+			</xsl:variable>
 		<xsl:variable name="xref_fn">
-			<xref ref-type="fn" rid="fn_{$number}"> <!-- rid="fn_{$number}" -->
+			<xref ref-type="fn" rid="fn_{$sfx}{$number}"> <!-- rid="fn_{$number}" -->
 				<sup><xsl:value-of select="$number"/>)</sup>
 			</xref>
-			<fn id="fn_{$number}">
+			<fn id="fn_{$sfx}{$number}">
 				<label>
 					<sup><xsl:value-of select="$number"/>)</sup>
 				</label>
@@ -2255,9 +2257,10 @@
 			<xsl:call-template name="getId"/>
 		</xsl:variable>
 		 <xsl:variable name="id" select="$elements//element[@source_id = $current_id]/@id"/> -->
-		<xsl:variable name="id"><xsl:call-template name="getId"/></xsl:variable>
+		<!-- <xsl:variable name="id"><xsl:call-template name="getId"/></xsl:variable> -->
 		<!-- NISO STS TagLibrary: https://www.niso-sts.org/TagLibrary/niso-sts-TL-1-0-html/element/graphic.html -->
-		<graphic id="{$id}" xlink:href="{$id}">
+		<graphic xlink:href="{@id}"> <!-- id="{$id}"  xlink:href="{$id}"-->
+			<xsl:copy-of select="@id"/>
 			<!-- <xsl:copy-of select="@mimetype"/> -->
 			<xsl:apply-templates select="@*"/>
 			<!-- <xsl:processing-instruction name="isoimg-id">
