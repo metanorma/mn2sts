@@ -21,53 +21,28 @@ jobs:
         with:
           java-version: 1.8
 
-#      - name: Use Metanorma
-#        run: |
-#          sudo apt-get update
-#          curl -L https://raw.githubusercontent.com/metanorma/metanorma-linux-setup/master/ubuntu.sh | sudo bash
-#          sudo chown -R $USER:$(id -gn $USER) $HOME/.config
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 2.7
+          bundler-cache: true
 
-      - name: Install bundler
-        run: |
-          sudo gem install bundler
+      - run: sudo snap install yq
 
-      - name: Install yq
-        run: |
-          sudo snap install yq
-          # echo "::add-path::/snap/bin"
-          echo "/snap/bin" >> $GITHUB_PATH
+      - run: make test
 
-      - name: Instal gems from local Gemfile
-        run: |
-          curl -L --retry 3 https://raw.githubusercontent.com/metanorma/metanorma-build-scripts/master/gemfile-to-bundle-add.sh | bash
+      - run: make all
 
-#      - uses: actions/checkout@master
+      - run: make mn2stsDTD_NISO
 
-      - name: Run tests
-        run: |
-          make test
+#      - run: make mn2stsDTD_ISO
 
-      - name: Build
-        run: |
-          make all
-
-      - name: Test against DTD NISO
-        run: |
-          make mn2stsDTD_NISO
-
-#      - name: Test against DTD ISO
-#        run: |
-#          make mn2stsDTD_ISO
-
-      - name: Compile output
-        run: |
-          make publish
+      - run: make publish
 
 #      - name: Deploy to Maven
 #        env:
 #          # for deploy mn2sts
-#          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
-#          GITHUB_USERNAME: ${{ secrets.PAT_USERNAME }}
+#          GITHUB_TOKEN: ${{ secrets.METANORMA_CI_PAT_TOKEN }}
+#          GITHUB_USERNAME: ${{ secrets.METANORMA_CI_PAT_TOKEN }}
 #        run: |
 #          make deploy
 
@@ -87,7 +62,7 @@ jobs:
       - name: Get Version
         id: get_version
         run: |
-          echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\/v/}
+          echo VERSION=${GITHUB_REF/refs\/tags\/v/} >> ${GITHUB_ENV}
 
       - name: Upload Release Asset
         id: upload-release-asset
