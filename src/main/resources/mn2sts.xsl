@@ -2085,6 +2085,10 @@
       <xsl:attribute name="id">
         <xsl:value-of select="$id"/>
       </xsl:attribute>
+			<xsl:variable name="orientation" select="normalize-space(preceding-sibling::*[1][local-name() = 'pagebreak']/@orientation)"/>
+			<xsl:if test="$orientation = 'landscape'">
+				<xsl:attribute name="orientation"><xsl:value-of select="$orientation"/></xsl:attribute>
+			</xsl:if>
 			<xsl:variable name="label">
 				<xsl:choose>
 					<xsl:when test="ancestor::*[local-name() = 'amend']/*[local-name() = 'autonumber'][@type = 'table']">
@@ -2455,6 +2459,19 @@
 			<xsl:apply-templates/>
 		</sec>
 	</xsl:template>
+	
+	<xsl:template match="*[local-name() = 'pagebreak']">
+		<xsl:choose>
+			<xsl:when test="@orientation = 'landscape' and following-sibling::*[1][local-name() = 'table']"></xsl:when> <!-- attribute orientation will be added in table-wrap element -->
+			<xsl:when test="@orientation = 'portrait' and preceding-sibling::*[1][local-name() = 'table'] and preceding-sibling::*[2][local-name() = 'pagebreak']"></xsl:when> <!-- attribute orientation  added in table-wrap element -->
+			<xsl:otherwise>
+				<xsl:processing-instruction name="Para">
+					<xsl:text>Page_Break</xsl:text>
+				</xsl:processing-instruction>
+			</xsl:otherwise>
+		</xsl:choose>
+	</xsl:template>
+
 	
 	<xsl:template name="getLevel">
 		<xsl:variable name="level_total" select="count(ancestor::*)"/>
