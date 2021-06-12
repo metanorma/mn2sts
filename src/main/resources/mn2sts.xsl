@@ -348,7 +348,7 @@
 							<xsl:apply-templates select="*[local-name() = 'annex']" mode="back"/>
 						</app-group>
 					</xsl:if>
-					<xsl:apply-templates select="*[local-name() = 'bibliography']/*[local-name() = 'references'][not(@normative='true')]" mode="back"/>
+					<xsl:apply-templates select="*[local-name() = 'bibliography']/*[local-name() = 'references'][not(@normative='true')] | *[local-name() = 'bibliography']/*[local-name() = 'clause'][*[local-name() = 'references'][not(@normative='true')]]" mode="back"/>
 					<xsl:apply-templates select="*[local-name() = 'indexsect']"/>
 				</back>
 			</xsl:if>
@@ -1128,9 +1128,11 @@
 					<xsl:number format="_1" count="*[local-name() = 'references'][not(@normative='true')]"/>
 				</xsl:if>
 			</xsl:attribute>
-			<xsl:apply-templates select="*[local-name() = 'title'][1]" mode="back"/>
+			<!-- <xsl:apply-templates select="*[local-name() = 'title'][1]" mode="back"/> -->
 			
-			<xsl:choose>
+			<xsl:apply-templates/>
+			
+			<!-- <xsl:choose>
 				<xsl:when test="*[local-name() = 'title'][2]">
 					<ref-list>
 						<xsl:apply-templates select="*[local-name() = 'title'][2]" mode="back"/>
@@ -1140,13 +1142,33 @@
 				<xsl:otherwise>
 					<xsl:apply-templates/>
 				</xsl:otherwise>
-			</xsl:choose>
+			</xsl:choose> -->
 		</ref-list>
 	</xsl:template>
-	<xsl:template match="*[local-name() = 'bibliography']/*[local-name() = 'references'][not(@normative='true')]/*[local-name() = 'title']" priority="2"/>
+	
+	<!-- <xsl:template match="*[local-name() = 'bibliography']/*[local-name() = 'references'][not(@normative='true')]/*[local-name() = 'title']" priority="2"/>
 	<xsl:template match="*[local-name() = 'bibliography']/*[local-name() = 'references'][not(@normative='true')]/*[local-name() = 'title']" mode="back">
 		<title><xsl:apply-templates /></title>
+	</xsl:template> -->
+	
+	<xsl:template match="*[local-name() = 'bibliography']/*[local-name() = 'references'][not(@normative='true')]/*[local-name() = 'title']">
+		<title><xsl:apply-templates /></title>
 	</xsl:template>
+	
+	<xsl:template match="*[local-name() = 'bibliography']/*[local-name() = 'clause'][*[local-name() = 'references'][not(@normative='true')]]" mode="back">
+		<ref-list content-type="bibl">
+			<xsl:copy-of select="@id"/>
+			<xsl:apply-templates/>
+		</ref-list>
+	</xsl:template>
+	
+	<xsl:template match="*[local-name() = 'bibliography']/*[local-name() = 'clause']/*[local-name() = 'references'][not(@normative='true')]">
+		<ref-list>
+			<xsl:copy-of select="@id"/>
+			<xsl:apply-templates/>
+		</ref-list>
+	</xsl:template>
+	
 	
 	<xsl:template match="*[local-name() = 'bibitem'][1][ancestor::*[local-name() = 'references'][@normative='true']]" priority="2">
 		<ref-list content-type="norm-refs">
