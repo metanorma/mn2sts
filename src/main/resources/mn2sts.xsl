@@ -2192,9 +2192,29 @@
 			<xsl:call-template name="getId"/>
 		</xsl:variable>
 		<xsl:variable name="id" select="$elements//element[@source_id = $current_id]/@id"/> -->
-		<xsl:variable name="id"><xsl:call-template name="getId"/></xsl:variable>
-		<p>
-		<array id="{$id}">
+		<xsl:choose>
+			<xsl:when test="preceding-sibling::*[1][local-name() = 'figure']">
+				<xsl:call-template name="create_array"/>
+			</xsl:when>
+			<xsl:otherwise>
+				<p>
+					<xsl:call-template name="create_array"/>
+				</p>
+			</xsl:otherwise>
+		</xsl:choose>
+		
+	</xsl:template>
+
+	<xsl:template name="create_array">
+		<!-- <xsl:variable name="id"><xsl:call-template name="getId"/></xsl:variable> -->
+		<array> <!-- id="{$id}" -->
+			<xsl:copy-of select="@id"/>
+			<xsl:if test="preceding-sibling::*[1][local-name() = 'figure']">
+				<xsl:attribute name="content-type">figure-index</xsl:attribute>
+			</xsl:if>
+			<xsl:if test="@key = 'true'">
+				<label>Key</label>
+			</xsl:if>
 			<table>
 				<tbody>
 					<xsl:apply-templates />
@@ -2205,7 +2225,6 @@
 		<xsl:for-each select="*[local-name() = 'note']">
 			<xsl:call-template name="note"/>
 		</xsl:for-each>
-		</p>
 	</xsl:template>
 	
 	<xsl:template match="*[local-name() = 'dl']/*[local-name() = 'note']" priority="2"/>
@@ -2231,10 +2250,20 @@
 		<!-- <xsl:variable name="id" select="$elements//element[@source_id = $current_id]/@id"/> -->
 		<xsl:variable name="id"><xsl:call-template name="getId"/></xsl:variable>
 		<xsl:variable name="section" select="$elements//element[@source_id = $current_id]/@section"/>
-		<fig-group id="{$id}" content-type="figures">
+		<xsl:variable name="element_name">
+			<xsl:choose>
+				<xsl:when test="$organization = 'BSI'">fig</xsl:when>
+				<xsl:otherwise>fig-group</xsl:otherwise>
+			</xsl:choose>
+		</xsl:variable>
+		<xsl:element name="{$element_name}">
+			<xsl:attribute name="id"><xsl:value-of select="$id"/></xsl:attribute>
+			<xsl:if test="$element_name = 'fig-group'">
+				<xsl:attribute name="content-type">figures</xsl:attribute>
+			</xsl:if>
 			<label><xsl:value-of select="$section"/></label>
 			<xsl:apply-templates />
-		</fig-group>
+		</xsl:element>
 	</xsl:template>
 	
 	<xsl:template match="*[local-name() = 'figure']">
@@ -2244,23 +2273,37 @@
 		<!-- <xsl:variable name="id" select="$elements//element[@source_id = $current_id]/@id"/> -->
 		<xsl:variable name="id"><xsl:call-template name="getId"/></xsl:variable>
 		<xsl:variable name="section" select="$elements//element[@source_id = $current_id]/@section"/>
-		<fig id="{$id}" fig-type="figure">
-			<label>
-				<xsl:choose>
-					<xsl:when test="ancestor::*[local-name() = 'amend']/*[local-name() = 'autonumber'][@type = 'figure']">
-						<xsl:value-of select="ancestor::*[local-name() = 'amend']/*[local-name() = 'autonumber'][@type = 'figure']/text()"/>
-					</xsl:when>
-					<xsl:otherwise>
-						<xsl:value-of select="$section"/>
-					</xsl:otherwise>
-				</xsl:choose>
-			</label>
-			<xsl:apply-templates />
-		</fig>
+		
+		<xsl:choose>
+			<xsl:when test="$organization = 'BSI' and parent::*[local-name() = 'figure']">
+				<graphic xlink:href="{*[local-name() = 'image']/@src}">
+					<xsl:apply-templates select="*[not(local-name() = 'image')]"/>
+				</graphic>
+			</xsl:when>
+			<xsl:otherwise>	
+				<fig id="{$id}" fig-type="figure">
+					<label>
+						<xsl:choose>
+							<xsl:when test="ancestor::*[local-name() = 'amend']/*[local-name() = 'autonumber'][@type = 'figure']">
+								<xsl:value-of select="ancestor::*[local-name() = 'amend']/*[local-name() = 'autonumber'][@type = 'figure']/text()"/>
+							</xsl:when>
+							<xsl:otherwise>
+								<xsl:value-of select="$section"/>
+							</xsl:otherwise>
+						</xsl:choose>
+					</label>
+					<xsl:apply-templates />
+				</fig>
+			</xsl:otherwise>
+		</xsl:choose>
 	</xsl:template>
 	
 	
 	<xsl:template match="*[local-name() = 'figure']/*[local-name() = 'name']" priority="2">
+		<xsl:variable name="label" select="substring-before(node()[1][self::text()], '&#xa0;')"/>
+		<xsl:if test="../parent::*[local-name() = 'figure'] and $organization = 'BSI' and normalize-space($label) != ''">
+			<label><xsl:value-of select="$label"/></label>
+		</xsl:if>
 		<caption>
 			<title>
 				<xsl:apply-templates/>
@@ -2272,6 +2315,9 @@
 		<xsl:choose>
 			<xsl:when test="contains(., '—')">
 				<xsl:value-of select="normalize-space(substring-after(., '—'))"/>
+			</xsl:when>
+			<xsl:when test="../parent::*[local-name() = 'figure'] and contains(., '&#xa0;')"><!-- move text like 'a)' to label, see above -->
+				<xsl:value-of select="normalize-space(substring-after(., '&#xa0;'))"/>
 			</xsl:when>
 			<xsl:otherwise>
 				<xsl:value-of select="."/>
