@@ -1806,12 +1806,17 @@
 			<xsl:variable name="reference" select="@bibitemid"/>
 			<!-- <xsl:variable name="docidentifier_URN" select="//*[local-name() = 'bibitem'][@id = $reference]/*[local-name() = 'docidentifier'][@type = 'URN']"/> -->
 			<xsl:variable name="docidentifier_URN" select="$bibitems_URN/bibitem[@id = $reference]/urn"/>
-			<xsl:if test="$docidentifier_URN != ''">
-				<xsl:attribute name="std-id">
-					<xsl:value-of select="$docidentifier_URN"/>
-				</xsl:attribute>
-			</xsl:if>
-			
+			<xsl:attribute name="std-id">
+				<xsl:choose>
+					<xsl:when test="$docidentifier_URN != ''">
+						<xsl:value-of select="$docidentifier_URN"/>
+					</xsl:when>
+					<xsl:otherwise>
+						<xsl:value-of select="$reference"/>
+					</xsl:otherwise>
+				</xsl:choose>
+			</xsl:attribute>
+      
 			<std-ref>
 				
 				<xsl:choose>
