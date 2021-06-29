@@ -22,7 +22,6 @@ public class ResourcesUtils {
      *
      * @param resourceUrl
      * @param targetPath
-     * @return
      */
     public static void copyResources(URL resourceUrl, String basePath, File targetPath) throws IOException, URISyntaxException {
         
