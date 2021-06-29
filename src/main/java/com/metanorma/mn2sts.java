@@ -106,45 +106,6 @@ public class mn2sts {
 
     static final String USAGE = getUsage();
 
-
-
-    
-
-    /*private void checkSTS(File xml) throws SAXParseException {
-            
-        List<String> exceptions = new LinkedList<>(); 
-
-        String checkSrc = CheckAgainstMap.getMap().get(checkAgainst);
-
-        boolean isXSDcheck = checkSrc.toLowerCase().endsWith(".xsd");
-
-        if (isXSDcheck) {
-            XSDValidator xsdValidator = new XSDValidator(xml);
-            exceptions = xsdValidator.validate(checkAgainst);                
-        } else {                
-            DTDValidator dtdValidator = new DTDValidator(xml);
-            dtdValidator.setDebug(DEBUG);
-            exceptions = dtdValidator.validate(checkAgainst);                
-        }
-
-
-        StringBuilder sbErrors = new StringBuilder();
-        if (exceptions.isEmpty()) {
-            System.out.println(xml.getAbsolutePath() + " is valid.");            
-        } else {
-            sbErrors.append(xml.getAbsolutePath());
-            sbErrors.append(" is NOT valid reason:");
-            sbErrors.append("\n");
-            //System.out.println(xml.getAbsolutePath() + " is NOT valid reason:");
-            exceptions.forEach((exception) -> {
-                //System.out.println("[ERROR] " + exception);
-                sbErrors.append("[ERROR] ");
-                sbErrors.append(exception);
-                sbErrors.append("\n");
-            });
-            throw new SAXParseException(sbErrors.toString(), null);
-        }   
-    }*/
     
     /**
      * Main method.
@@ -176,51 +137,9 @@ public class mn2sts {
                 
                 STSValidator validator = new STSValidator(cmdCheckOnly.getOptionValue("xml-file-in"), cmdCheckOnly.getOptionValue("check-type"));
                 
-                /*final String argXMLin = cmdCheckOnly.getOptionValue("xml-file-in");
-                File fXMLin = new File(argXMLin);
-                if (!fXMLin.exists()) {
-                    System.out.println(String.format(INPUT_NOT_FOUND, XML_INPUT, fXMLin));
-                    System.exit(ERROR_EXIT_CODE);
-                }*/
-
-                
-                /*if (cmdCheckOnly.hasOption("check-type")) {
-                    String ctype = cmdCheckOnly.getOptionValue("check-type");  
-                    ctype = ctype.replace("-", "_").toUpperCase();
-                    if (CheckAgainstEnum.valueOf(ctype) != null) {
-                        checkAgainst = CheckAgainstEnum.valueOf(ctype);
-                    } else {
-                        System.out.println("Unknown option value: " + cmdCheckOnly.getOptionValue("check-type"));
-                        System.exit(ERROR_EXIT_CODE);
-                    }
-                }*/
-                
-                /*System.out.println(String.format(INPUT_LOG, XML_INPUT, fXMLin));                
-                System.out.println();*/
-
-                
                 if (!validator.check()) {
                     System.exit(ERROR_EXIT_CODE);
                 }
-                
-                
-                
-                /*try {
-                    mn2sts app = new mn2sts();
-
-                    app.checkSTS(fXMLin);
-                    
-                    System.out.println("End!");
-                
-                } catch (SAXParseException e) {
-                    System.err.println(e.toString());
-                    System.exit(ERROR_EXIT_CODE);
-                } catch (Exception e) {
-                    e.printStackTrace(System.err);
-                    System.exit(ERROR_EXIT_CODE);
-                }*/
-                
-                
                 
                 cmdFail = false;
             } catch (ParseException exp) {
@@ -238,85 +157,12 @@ public class mn2sts {
 
                 XsltConverter converter = new XsltConverter();
                 converter.setInputFilePath(cmd.getOptionValue("xml-file-in"));
-                
-                /*final String argXMLin = cmd.getOptionValue("xml-file-in");
-                File fXMLin = new File(argXMLin);
-                if (!fXMLin.exists()) {
-                    System.out.println(String.format(INPUT_NOT_FOUND, XML_INPUT, fXMLin));
-                    System.exit(ERROR_EXIT_CODE);
-                }*/
-
-                /*final String argXSL = cmd.getOptionValue("xsl-file");
-                File fXSL = null;
-                if (argXSL != null) {
-                    fXSL = new File(argXSL);
-                    if (!fXSL.exists()) {
-                        System.out.println(String.format(INPUT_NOT_FOUND, XSL_INPUT, fXSL));
-                        System.exit(ERROR_EXIT_CODE);
-                    }
-                }*/
-                
                 converter.setInputXslPath(cmd.getOptionValue("xsl-file"));
-                
-
-                /*final String argXMLout = cmd.getOptionValue("xml-file-out");
-                File fXMLout = new File(argXMLout);*/
-                
                 converter.setOutputFilePath(cmd.getOptionValue("xml-file-out"));
-                
-
-                //DEBUG = cmd.hasOption("debug");
-                
                 converter.setDebugMode(cmd.hasOption("debug"));
-
-                /*if (cmd.hasOption("check-type")) {
-                    String ctype = cmd.getOptionValue("check-type");  
-                    ctype = ctype.replace("-", "_").toUpperCase();                    
-                    try {
-                        checkAgainst = CheckAgainstEnum.valueOf(ctype);
-                    } catch (Exception ex) {
-                        System.out.println("Unknown option value: " + cmd.getOptionValue("check-type"));
-                        System.exit(ERROR_EXIT_CODE);
-                    }
-                }*/
-                
                 converter.setCheckType(cmd.getOptionValue("check-type"));
-                
-                
-
-                /*if (cmd.hasOption("output-format")) {
-                    String outputtype = cmd.getOptionValue("output-format");  
-                    outputtype = outputtype.toUpperCase();                    
-                    try {
-                        outputFormat = OutputFormatEnum.valueOf(outputtype);
-                    } catch (Exception ex) {
-                        System.out.println("Unknown option value: " + cmd.getOptionValue("output-format"));
-                        System.exit(ERROR_EXIT_CODE);
-                    }
-                }*/
-                
                 converter.setOutputFormat(cmd.getOptionValue("output-format"));
-                //System.out.println(String.format(INPUT_LOG, XML_INPUT, fXMLin));
-                
-                /*if (fXSL != null) {
-                    System.out.println(String.format(INPUT_LOG, XSL_INPUT, fXSL));
-                }
-                System.out.println(String.format(OUTPUT_LOG, XML_OUTPUT, fXMLout, outputFormat));
-                System.out.println();*/
 
-                /*try {
-                    mn2sts app = new mn2sts();
-
-                    app.convertmn2sts(fXMLin, fXSL, fXMLout);
-                    System.out.println("End!");
-                } catch (SAXParseException e) {
-                    System.err.println(e.toString());
-                    System.exit(ERROR_EXIT_CODE);
-                } catch (Exception e) {
-                    e.printStackTrace(System.err);
-                    System.exit(ERROR_EXIT_CODE);
-                }*/
-                
                 boolean result = converter.process();
                 
                 if (!result) {

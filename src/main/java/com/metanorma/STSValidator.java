@@ -47,7 +47,6 @@ public class STSValidator {
             
             File fXMLin = new File(xmlFilePath);
             if (!fXMLin.exists()) {
-                //System.out.println(String.format(INPUT_NOT_FOUND, XML_INPUT, fXMLin));
                 logger.severe(String.format(INPUT_NOT_FOUND, XML_INPUT, fXMLin));
                 return false;
             }
@@ -56,7 +55,6 @@ public class STSValidator {
             if (CheckAgainstEnum.valueOf(ctype) != null) {
                 checkAgainst = CheckAgainstEnum.valueOf(ctype);
             } else {
-                //System.out.println("Unknown option value: " + checkType);
                 logger.log(Level.SEVERE, "Unknown option value:  {0}", checkType);
                 return false;
             }
@@ -79,26 +77,20 @@ public class STSValidator {
             
             StringBuilder sbErrors = new StringBuilder();
             if (exceptions.isEmpty()) {
-                //System.out.println(fXMLin.getAbsolutePath() + " is valid.");
                 logger.log(Level.INFO, "{0} is valid.", fXMLin.getAbsolutePath());
             } else {
                 sbErrors.append(fXMLin.getAbsolutePath());
                 sbErrors.append(" is NOT valid reason:");
                 sbErrors.append("\n");
-                //System.out.println(xml.getAbsolutePath() + " is NOT valid reason:");
                 exceptions.forEach((exception) -> {
-                    //System.out.println("[ERROR] " + exception);
                     sbErrors.append("[ERROR] ");
                     sbErrors.append(exception);
                     sbErrors.append("\n");
                 });
-                //throw new SAXParseException(sbErrors.toString(), null);
                 logger.severe(sbErrors.toString());
                 return false;
             } 
-            //logger.info("Validation OK!");
         } catch (Exception e) {
-            //e.printStackTrace(System.err);
             logger.severe(e.toString());
             return false;
         }

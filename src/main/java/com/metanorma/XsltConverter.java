@@ -31,18 +31,16 @@ import org.xml.sax.SAXParseException;
  */
 
 /**
- * This class for the conversion of an Metanorma XML ro NISO/ISO XML file
+ * This class for the conversion of an Metanorma XML to NISO/ISO XML file
  */
 public class XsltConverter {
 
     private static final Logger logger = Logger.getLogger(LoggerHelper.LOGGER_NAME);
     
     private String inputFilePath = "document.xml"; // default input file name
-    //private boolean isInputFileRemote = false; // true, if inputFilePath starts from http, https, www.
     
     private String inputXslPath = null; // default xsl is null (will be used from jar)
     private File fileXSL = null;
-    
     
     private String outputFilePath = ""; // default output file name
     
@@ -96,17 +94,7 @@ public class XsltConverter {
     public boolean process() {
         try {
             
-        
-            /*if (inputFilePath.toLowerCase().startsWith("http") || inputFilePath.toLowerCase().startsWith("www.")) {
-                isInputFileRemote = true;
-                inputFilePath = Util.downloadFile(inputFilePath, tmpfilepath);
-                if (inputFilePath.isEmpty()) {
-                    return false;
-                }
-            }*/
-            
             if (!new File(inputFilePath).exists()) {
-                //System.out.println(String.format(INPUT_NOT_FOUND, XML_INPUT, fXMLin));
                 logger.severe(String.format(INPUT_NOT_FOUND, XML_INPUT, inputFilePath));
                 return false;
             }
@@ -114,7 +102,6 @@ public class XsltConverter {
             if (inputXslPath != null) {
                 fileXSL = new File(inputXslPath);
                 if (!fileXSL.exists()) {
-                    //System.out.println(String.format(INPUT_NOT_FOUND, XSL_INPUT, fXSL));
                     logger.severe(String.format(INPUT_NOT_FOUND, XSL_INPUT, fileXSL));
                     return false;
                 }
@@ -125,7 +112,6 @@ public class XsltConverter {
             if (CheckAgainstEnum.valueOf(ctype) != null) {
                 checkTypeEnumValue = CheckAgainstEnum.valueOf(ctype);
             } else {
-                //System.out.println("Unknown option value: " + checkType);
                 logger.log(Level.SEVERE, "Unknown option value:  {0}", checkType);
                 return false;
             }
@@ -134,7 +120,6 @@ public class XsltConverter {
             try {
                 outputFormatEnumValue = OutputFormatEnum.valueOf(outputFormat.toUpperCase());
             } catch (Exception ex) {
-                //System.out.println("Unknown option value: " + outputFormat);
                 logger.log(Level.SEVERE, "Unknown option value:  {0}", outputFormat);
                 return false;
             }
@@ -194,7 +179,6 @@ public class XsltConverter {
         Source src = new StreamSource(fXmlIn);
         StringWriter resultWriter = new StringWriter();
         StreamResult sr = new StreamResult(resultWriter);
-        //System.out.println("Transforming...");
         logger.info("Transforming...");
         transformer.transform(src, sr);
         String xmlSTS = resultWriter.toString();
@@ -203,7 +187,6 @@ public class XsltConverter {
         try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(fXmlOut.getAbsolutePath()))) {
             writer.write(xmlSTS);
         }
-
     }
     
     private void OutputJaxpImplementationInfo() {

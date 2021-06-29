@@ -87,9 +87,6 @@ public class mn2stsTests {
     @Test
     public void xslNotExists() throws ParseException {
         exitRule.expectSystemExitWithStatus(-1);
-
-        // ClassLoader classLoader = getClass().getClassLoader();        
-        //String xml = classLoader.getResource(XMLFILE_MN).getFile();
         
         String[] args = new String[]{"--xml-file-in", XMLFILE_MN, "--xsl-file", "alternate.xsl", "--xml-file-out", "out.xml"};
         mn2sts.main(args);
@@ -100,8 +97,6 @@ public class mn2stsTests {
 
     @Test
     public void successConvertAndCheckXSD() throws ParseException, Exception {
-        // ClassLoader classLoader = getClass().getClassLoader();        
-        //String xml = classLoader.getResource(XMLFILE_MN).getFile();
         
         Path xmlout = Paths.get(System.getProperty("buildDirectory"), "out.xml");
 
@@ -135,8 +130,6 @@ public class mn2stsTests {
     public void NoSuccessConvertAndCheckDTD_ISO() throws ParseException, Exception {
         exitRule.expectSystemExitWithStatus(-1);
         
-        //ClassLoader classLoader = getClass().getClassLoader();        
-        //String xml = classLoader.getResource(XMLFILE_MN).getFile();        
         Path xmlout = Paths.get(System.getProperty("buildDirectory"), "out.xml");
 
         String[] args = new String[]{"--xml-file-in",  XMLFILE_MN, "--xml-file-out", xmlout.toAbsolutePath().toString(), "--check-type", "dtd-iso"};
@@ -147,10 +140,8 @@ public class mn2stsTests {
     }
     
     @Test
-    // Element type "code" must be declared. etc...
     public void successConvertAndCheckDTD_ISO() throws ParseException, Exception {        
-        // ClassLoader classLoader = getClass().getClassLoader();        
-        //String xml = classLoader.getResource(XMLFILE_MN).getFile();        
+        
         Path xmlout = Paths.get(System.getProperty("buildDirectory"), "out.xml");
 
         String[] args = new String[]{"--xml-file-in",  XMLFILE_MN, "--xml-file-out", xmlout.toAbsolutePath().toString(), "--check-type", "dtd-iso", "--output-format", "iso"};
