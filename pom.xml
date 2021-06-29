@@ -5,7 +5,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.metanorma</groupId>
 	<artifactId>mn2sts</artifactId>
-	<version>1.8</version>
+	<version>1.9</version>
 	<name>Metanorma XML to NISO STS XML converter</name>
 	<packaging>jar</packaging>
 	<url>https://www.metanorma.com</url>

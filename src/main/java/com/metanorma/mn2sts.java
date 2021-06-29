@@ -1,30 +1,9 @@
 package com.metanorma;
 
-import com.metanorma.validator.CheckAgainstEnum;
-import com.metanorma.validator.CheckAgainstMap;
-import com.metanorma.validator.DTDValidator;
-import com.metanorma.validator.XSDValidator;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.IOException;
+import static com.metanorma.Constants.*;
+import com.metanorma.utils.LoggerHelper;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-
-import java.security.CodeSource;
-import java.text.MessageFormat;
-import java.util.LinkedList;
-import java.util.List;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.SAXParserFactory;
-import javax.xml.transform.Source;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.stream.StreamResult;
-import javax.xml.transform.stream.StreamSource;
-import javax.xml.xpath.XPathFactory;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -33,26 +12,11 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.xml.sax.SAXParseException;
 
 /**
- * This class for the conversion of an XML file to PDF using FOP and JEuclid
+ * This application for the conversion of an XML file from Metanorma to NISO/ISO STS format
  */
 public class mn2sts {
-
-    static final String CMD = "java -jar mn2sts.jar";
-    static final String INPUT_NOT_FOUND = "Error: %s file '%s' not found!";
-    static final String XML_INPUT = "XML";
-    static final String XML_OUTPUT = "XML";
-    static final String XSL_INPUT = "XSL";
-    static final String INPUT_LOG = "Input: %s (%s)";
-    static final String OUTPUT_LOG = "Output: %s (%s), format %s STS";
-
-    static CheckAgainstEnum checkAgainst = CheckAgainstEnum.XSD_NISO;
-    
-    static OutputFormatEnum outputFormat = OutputFormatEnum.NISO;
-    
-    static boolean DEBUG = false;
 
     static String VER = Util.getAppVersion();
     
@@ -142,58 +106,11 @@ public class mn2sts {
 
     static final String USAGE = getUsage();
 
-    static final int ERROR_EXIT_CODE = -1;
 
 
-    /**
-     * Converts an MN XML file to NISO STS XML file
-     *
-     * @param xmlin the XML source file
-     * @param xsl the external XSL file
-     * @param xmlout the XML output file
-     * @throws IOException In case of an I/O problem
-     * @throws javax.xml.transform.TransformerException
-     */
-    private void convertmn2sts(File xmlin, File xsl, File xmlout) throws IOException, TransformerException, SAXParseException {
-        
-        try {
-            OutputJaxpImplementationInfo();
+    
 
-            Source srcXSL = null;
-            if (xsl != null) { //external xsl
-                srcXSL = new StreamSource(xsl);
-            } else { // internal xsl
-                srcXSL = new StreamSource(Util.getStreamFromResources(getClass().getClassLoader(), "mn2sts.xsl"));
-            }
-
-            TransformerFactory factory = TransformerFactory.newInstance();
-            Transformer transformer = factory.newTransformer(srcXSL);
-            transformer.setParameter("debug", DEBUG);
-            transformer.setParameter("outputformat", outputFormat);
- 
-            Source src = new StreamSource(xmlin);
-            StringWriter resultWriter = new StringWriter();
-            StreamResult sr = new StreamResult(resultWriter);
-            System.out.println("Transforming...");
-            transformer.transform(src, sr);
-            String xmlSTS = resultWriter.toString();
-
-            try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(xmlout.getAbsolutePath()))) {
-                writer.write(xmlSTS);
-            }
-            
-            // check agains XSD NISO, DTD NISO or DTD ISO
-            checkSTS(xmlout);
-                
-        } catch (SAXParseException e) {            
-            throw (e);
-        } catch (Exception e) {
-            e.printStackTrace(System.err);
-            System.exit(ERROR_EXIT_CODE);
-        }
-    }
-
-    private void checkSTS(File xml) throws SAXParseException {
+    /*private void checkSTS(File xml) throws SAXParseException {
             
         List<String> exceptions = new LinkedList<>(); 
 
@@ -227,7 +144,7 @@ public class mn2sts {
             });
             throw new SAXParseException(sbErrors.toString(), null);
         }   
-    }
+    }*/
     
     /**
      * Main method.
@@ -237,6 +154,8 @@ public class mn2sts {
      */
     public static void main(String[] args) throws ParseException {
 
+        LoggerHelper.setupLogger();
+        
         CommandLineParser parser = new DefaultParser();
                
         boolean cmdFail = false;
@@ -252,21 +171,20 @@ public class mn2sts {
             try {
                 CommandLine cmdCheckOnly = parser.parse(optionsCheckOnly, args);
                 System.out.print("mn2sts ");
-                if(cmdCheckOnly.hasOption("version")) {                    
-                    System.out.print(VER);
-                }            
+                printVersion(cmdCheckOnly.hasOption("version"));
                 System.out.println("\n");
                 
-                printVersion(cmdCheckOnly.hasOption("version"));
+                STSValidator validator = new STSValidator(cmdCheckOnly.getOptionValue("xml-file-in"), cmdCheckOnly.getOptionValue("check-type"));
                 
-                final String argXMLin = cmdCheckOnly.getOptionValue("xml-file-in");
+                /*final String argXMLin = cmdCheckOnly.getOptionValue("xml-file-in");
                 File fXMLin = new File(argXMLin);
                 if (!fXMLin.exists()) {
                     System.out.println(String.format(INPUT_NOT_FOUND, XML_INPUT, fXMLin));
                     System.exit(ERROR_EXIT_CODE);
-                }
+                }*/
+
                 
-                if (cmdCheckOnly.hasOption("check-type")) {
+                /*if (cmdCheckOnly.hasOption("check-type")) {
                     String ctype = cmdCheckOnly.getOptionValue("check-type");  
                     ctype = ctype.replace("-", "_").toUpperCase();
                     if (CheckAgainstEnum.valueOf(ctype) != null) {
@@ -275,12 +193,19 @@ public class mn2sts {
                         System.out.println("Unknown option value: " + cmdCheckOnly.getOptionValue("check-type"));
                         System.exit(ERROR_EXIT_CODE);
                     }
+                }*/
+                
+                /*System.out.println(String.format(INPUT_LOG, XML_INPUT, fXMLin));                
+                System.out.println();*/
+
+                
+                if (!validator.check()) {
+                    System.exit(ERROR_EXIT_CODE);
                 }
                 
-                System.out.println(String.format(INPUT_LOG, XML_INPUT, fXMLin));                
-                System.out.println();
-
-                try {
+                
+                
+                /*try {
                     mn2sts app = new mn2sts();
 
                     app.checkSTS(fXMLin);
@@ -293,7 +218,10 @@ public class mn2sts {
                 } catch (Exception e) {
                     e.printStackTrace(System.err);
                     System.exit(ERROR_EXIT_CODE);
-                }
+                }*/
+                
+                
+                
                 cmdFail = false;
             } catch (ParseException exp) {
                 cmdFail = true;
@@ -305,21 +233,20 @@ public class mn2sts {
                 CommandLine cmd = parser.parse(options, args);
 
                 System.out.print("mn2sts ");
-                if(cmd.hasOption("version")) {                    
-                    System.out.print(VER);
-                }                
+                printVersion(cmd.hasOption("version"));
                 System.out.println("\n");
 
-                printVersion(cmd.hasOption("version"));
+                XsltConverter converter = new XsltConverter();
+                converter.setInputFilePath(cmd.getOptionValue("xml-file-in"));
                 
-                final String argXMLin = cmd.getOptionValue("xml-file-in");
+                /*final String argXMLin = cmd.getOptionValue("xml-file-in");
                 File fXMLin = new File(argXMLin);
                 if (!fXMLin.exists()) {
                     System.out.println(String.format(INPUT_NOT_FOUND, XML_INPUT, fXMLin));
                     System.exit(ERROR_EXIT_CODE);
-                }
+                }*/
 
-                final String argXSL = cmd.getOptionValue("xsl-file");
+                /*final String argXSL = cmd.getOptionValue("xsl-file");
                 File fXSL = null;
                 if (argXSL != null) {
                     fXSL = new File(argXSL);
@@ -327,14 +254,22 @@ public class mn2sts {
                         System.out.println(String.format(INPUT_NOT_FOUND, XSL_INPUT, fXSL));
                         System.exit(ERROR_EXIT_CODE);
                     }
-                }
+                }*/
+                
+                converter.setInputXslPath(cmd.getOptionValue("xsl-file"));
+                
 
-                final String argXMLout = cmd.getOptionValue("xml-file-out");
-                File fXMLout = new File(argXMLout);
+                /*final String argXMLout = cmd.getOptionValue("xml-file-out");
+                File fXMLout = new File(argXMLout);*/
+                
+                converter.setOutputFilePath(cmd.getOptionValue("xml-file-out"));
+                
 
-                DEBUG = cmd.hasOption("debug");
+                //DEBUG = cmd.hasOption("debug");
+                
+                converter.setDebugMode(cmd.hasOption("debug"));
 
-                if (cmd.hasOption("check-type")) {
+                /*if (cmd.hasOption("check-type")) {
                     String ctype = cmd.getOptionValue("check-type");  
                     ctype = ctype.replace("-", "_").toUpperCase();                    
                     try {
@@ -343,9 +278,13 @@ public class mn2sts {
                         System.out.println("Unknown option value: " + cmd.getOptionValue("check-type"));
                         System.exit(ERROR_EXIT_CODE);
                     }
-                }
+                }*/
+                
+                converter.setCheckType(cmd.getOptionValue("check-type"));
+                
+                
 
-                if (cmd.hasOption("output-format")) {
+                /*if (cmd.hasOption("output-format")) {
                     String outputtype = cmd.getOptionValue("output-format");  
                     outputtype = outputtype.toUpperCase();                    
                     try {
@@ -354,17 +293,18 @@ public class mn2sts {
                         System.out.println("Unknown option value: " + cmd.getOptionValue("output-format"));
                         System.exit(ERROR_EXIT_CODE);
                     }
-                }
+                }*/
                 
+                converter.setOutputFormat(cmd.getOptionValue("output-format"));
+                //System.out.println(String.format(INPUT_LOG, XML_INPUT, fXMLin));
                 
-                System.out.println(String.format(INPUT_LOG, XML_INPUT, fXMLin));
-                if (fXSL != null) {
+                /*if (fXSL != null) {
                     System.out.println(String.format(INPUT_LOG, XSL_INPUT, fXSL));
                 }
                 System.out.println(String.format(OUTPUT_LOG, XML_OUTPUT, fXMLout, outputFormat));
-                System.out.println();
+                System.out.println();*/
 
-                try {
+                /*try {
                     mn2sts app = new mn2sts();
 
                     app.convertmn2sts(fXMLin, fXSL, fXMLout);
@@ -375,8 +315,16 @@ public class mn2sts {
                 } catch (Exception e) {
                     e.printStackTrace(System.err);
                     System.exit(ERROR_EXIT_CODE);
+                }*/
+                
+                boolean result = converter.process();
+                
+                if (!result) {
+                    System.exit(ERROR_EXIT_CODE);
                 }
                 cmdFail = false;
+                
+            
             } catch (ParseException exp) {
                 cmdFail = true;
             }
@@ -397,23 +345,6 @@ public class mn2sts {
         return stringWriter.toString();
     }
 
-    private static void OutputJaxpImplementationInfo() {
-        if (DEBUG) {
-            System.out.println(getJaxpImplementationInfo("DocumentBuilderFactory", DocumentBuilderFactory.newInstance().getClass()));
-            System.out.println(getJaxpImplementationInfo("XPathFactory", XPathFactory.newInstance().getClass()));
-            System.out.println(getJaxpImplementationInfo("TransformerFactory", TransformerFactory.newInstance().getClass()));
-            System.out.println(getJaxpImplementationInfo("SAXParserFactory", SAXParserFactory.newInstance().getClass()));
-        }
-    }
-
-    private static String getJaxpImplementationInfo(String componentName, Class componentClass) {
-        CodeSource source = componentClass.getProtectionDomain().getCodeSource();
-        return MessageFormat.format(
-                "{0} implementation: {1} loaded from: {2}",
-                componentName,
-                componentClass.getName(),
-                source == null ? "Java Runtime" : source.getLocation());
-    }    
 
     private static void printVersion(boolean print) {
         if (print) {            

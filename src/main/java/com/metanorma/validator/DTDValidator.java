@@ -2,6 +2,7 @@ package com.metanorma.validator;
 
 import com.metanorma.ResourcesUtils;
 import com.metanorma.Util;
+import com.metanorma.utils.LoggerHelper;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -12,6 +13,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.OutputKeys;
@@ -26,6 +29,7 @@ import org.xml.sax.InputSource;
 
 public class DTDValidator extends Validator {
 
+    private static final Logger logger = Logger.getLogger(LoggerHelper.LOGGER_NAME);
     boolean DEBUG = false;
     
     public DTDValidator (File xml) {
@@ -38,7 +42,8 @@ public class DTDValidator extends Validator {
                 
         String checkSrc = CheckAgainstMap.getMap().get(checkAgainst);
         String checkSrcPath = "/" + new File(checkSrc).getParentFile();
-        System.out.println("Validate XML againts DTD " + checkSrc + "...");
+        //System.out.println("Validate XML againts DTD " + checkSrc + "...");
+        logger.log(Level.INFO, "Validate XML againts DTD {0}...", checkSrc);
         
         try {        
             DocumentBuilderFactory dbfactory = DocumentBuilderFactory.newInstance();

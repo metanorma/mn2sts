@@ -1,100 +1,106 @@
 package com.metanorma;
 
+import com.metanorma.utils.LoggerHelper;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.w3c.dom.ls.LSInput;
 
 
 public class LSInputImpl implements LSInput {
     
-private String publicId;
+    private static final Logger logger = Logger.getLogger(LoggerHelper.LOGGER_NAME);    
 
-private String systemId;
+    private String publicId;
 
-public String getPublicId() {
-    return publicId;
-}
+    private String systemId;
 
-public void setPublicId(String publicId) {
-    this.publicId = publicId;
-}
+    public String getPublicId() {
+        return publicId;
+    }
 
-public String getBaseURI() {
-    return null;
-}
+    public void setPublicId(String publicId) {
+        this.publicId = publicId;
+    }
 
-public InputStream getByteStream() {
-    return null;
-}
+    public String getBaseURI() {
+        return null;
+    }
 
-public boolean getCertifiedText() {
-    return false;
-}
+    public InputStream getByteStream() {
+        return null;
+    }
 
-public Reader getCharacterStream() {
-    return null;
-}
+    public boolean getCertifiedText() {
+        return false;
+    }
 
-public String getEncoding() {
-    return null;
-}
+    public Reader getCharacterStream() {
+        return null;
+    }
 
-public String getStringData() {
-    synchronized (inputStream) {
-        try {
-            byte[] input = new byte[inputStream.available()];
-            inputStream.read(input);
-            String contents = new String(input);
-            return contents;
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.out.println("Exception " + e);
-            return null;
+    public String getEncoding() {
+        return null;
+    }
+
+    public String getStringData() {
+        synchronized (inputStream) {
+            try {
+                byte[] input = new byte[inputStream.available()];
+                inputStream.read(input);
+                String contents = new String(input);
+                return contents;
+            } catch (IOException e) {
+                //e.printStackTrace();
+                //System.out.println("Exception " + e);
+                logger.log(Level.INFO, "Exception {0}", e);
+                return null;
+            }
         }
     }
-}
 
-public void setBaseURI(String baseURI) {
-}
+    public void setBaseURI(String baseURI) {
+    }
 
-public void setByteStream(InputStream byteStream) {
-}
+    public void setByteStream(InputStream byteStream) {
+    }
 
-public void setCertifiedText(boolean certifiedText) {
-}
+    public void setCertifiedText(boolean certifiedText) {
+    }
 
-public void setCharacterStream(Reader characterStream) {
-}
+    public void setCharacterStream(Reader characterStream) {
+    }
 
-public void setEncoding(String encoding) {
-}
+    public void setEncoding(String encoding) {
+    }
 
-public void setStringData(String stringData) {
-}
+    public void setStringData(String stringData) {
+    }
 
-public String getSystemId() {
-    return systemId;
-}
+    public String getSystemId() {
+        return systemId;
+    }
 
-public void setSystemId(String systemId) {
-    this.systemId = systemId;
-}
+    public void setSystemId(String systemId) {
+        this.systemId = systemId;
+    }
 
-public BufferedInputStream getInputStream() {
-    return inputStream;
-}
+    public BufferedInputStream getInputStream() {
+        return inputStream;
+    }
 
-public void setInputStream(BufferedInputStream inputStream) {
-    this.inputStream = inputStream;
-}
+    public void setInputStream(BufferedInputStream inputStream) {
+        this.inputStream = inputStream;
+    }
 
-private BufferedInputStream inputStream;
+    private BufferedInputStream inputStream;
 
-public LSInputImpl(String publicId, String sysId, InputStream input) {
-    this.publicId = publicId;
-    this.systemId = sysId;
-    this.inputStream = new BufferedInputStream(input);
-}
+    public LSInputImpl(String publicId, String sysId, InputStream input) {
+        this.publicId = publicId;
+        this.systemId = sysId;
+        this.inputStream = new BufferedInputStream(input);
+    }
 }
