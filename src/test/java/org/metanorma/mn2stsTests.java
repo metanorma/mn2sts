@@ -1,7 +1,9 @@
-package com.metanorma;
+package org.metanorma;
 
-import static com.metanorma.Constants.*;
-import com.metanorma.utils.LoggerHelper;
+import org.metanorma.mn2sts;
+import org.metanorma.RegExHelper;
+import static org.metanorma.Constants.*;
+import org.metanorma.utils.LoggerHelper;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;

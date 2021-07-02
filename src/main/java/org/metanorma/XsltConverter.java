@@ -1,8 +1,8 @@
-package com.metanorma;
+package org.metanorma;
 
-import static com.metanorma.Constants.*;
-import com.metanorma.utils.LoggerHelper;
-import com.metanorma.validator.CheckAgainstEnum;
+import static org.metanorma.Constants.*;
+import org.metanorma.utils.LoggerHelper;
+import org.metanorma.validator.CheckAgainstEnum;
 
 import java.io.BufferedWriter;
 import java.io.File;

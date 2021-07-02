@@ -40,7 +40,7 @@ Update version in `pom.xml`, e.g.:
 
 [source,xml]
 ----
-<groupId>com.metanorma</groupId>
+<groupId>org.metanorma</groupId>
 <artifactId>mn2sts</artifactId>
 <version>1.9</version>
 <name>Metanorma MN XML to NISO STS XML converter</name>
